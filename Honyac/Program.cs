@@ -14,53 +14,47 @@ namespace Honyac
 
         public string Execute()
         {
-            // 50+10-25
             var sb = new StringBuilder();
             sb.AppendLine($".intel_syntax noprefix");
             sb.AppendLine($".globl main");
             sb.AppendLine($"main:");
 
-            var index = 0;
-            while (index < SourceCode.Length)
+            var tokenList = TokenList.Tokenize(SourceCode);
+            var value = 0;
+            if (tokenList.TryConsumeNumber(out value))
             {
-                string calc;
-                if (index == 0)
+                sb.AppendLine($"  mov rax, {value}");
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid Code:{SourceCode}");
+            }
+
+            while (!tokenList.IsEof())
+            {
+                var cmd = string.Empty;
+                if (tokenList.Consume('+'))
                 {
-                    calc = "mov";
+                    cmd = "add";
+                }
+                else if (tokenList.Consume('-'))
+                {
+                    cmd = "sub";
                 }
                 else
                 {
-                    switch (SourceCode[index])
-                    {
-                        case '+':
-                            calc = "add";
-                            break;
-                        case '-':
-                            calc = "sub";
-                            break;
-                        default:
-                            throw new ArgumentException($"Invalid SourceCode:{SourceCode}");
-                    }
-                    index++;
+                    throw new ArgumentException($"Invalid Code:{SourceCode}");
                 }
 
-                var value = 0;
-                for (; index < SourceCode.Length; index++)
+                if (!tokenList.TryConsumeNumber(out value))
                 {
-                    if (char.IsDigit(SourceCode[index]))
-                    {
-                        value = value * 10 + int.Parse(SourceCode[index].ToString());
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    throw new ArgumentException($"Invalid Code:{SourceCode}");
                 }
-                sb.AppendLine($"  {calc} rax, {value}");
+
+                sb.AppendLine($"  {cmd} rax, {value}");
             }
 
             sb.AppendLine($"  ret");
-
             return sb.ToString();
         }
 
