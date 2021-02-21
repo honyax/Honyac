@@ -75,21 +75,37 @@ namespace Honyac
         }
 
         /// <summary>
-        /// 次のトークンが数値の場合、トークンを一つ読み進めて数字を取得し、trueを返す
-        /// それ以外の場合はfalseを返す
+        /// 次のトークンが期待している記号の時は、トークンを一つ読みすすめる
+        /// それ以外の場合はエラーを報告する
         /// </summary>
-        public bool TryConsumeNumber(out int value)
+        /// <param name="op"></param>
+        public void Expect(char op)
+        {
+            var token = Current;
+            if (token != null && token.Kind == TokenKind.Reserved && token.Str.Length == 1 && token.Str[0] == op)
+            {
+                CurrentIndex++;
+                return;
+            }
+
+            throw new ArgumentException($"Token Not Match Expect:{op} CurrentIndex:{CurrentIndex}");
+        }
+
+        /// <summary>
+        /// 次のトークンが数値の場合、トークンを1つ読み進めてその数値を返す。
+        /// それ以外の場合はエラーを報告する。
+        /// 
+        /// </summary>
+        public int ExpectNumber()
         {
             var token = Current;
             if (token != null && token.Kind == TokenKind.Num)
             {
-                value = token.Value;
                 CurrentIndex++;
-                return true;
+                return token.Value;
             }
 
-            value = 0;
-            return false;
+            throw new ArgumentException($"Token is Not Number CurrentIndex:{CurrentIndex}");
         }
 
         /// <summary>

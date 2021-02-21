@@ -59,14 +59,11 @@ namespace HonyacTests
         {
             var tokenList = TokenList.Tokenize("10 + 50 - 60");
             Assert.AreEqual(tokenList.Count, 5);
-            tokenList.TryConsumeNumber(out int value);
-            Assert.AreEqual(value, 10);
+            Assert.AreEqual(tokenList.ExpectNumber(), 10);
             Assert.IsTrue(tokenList.Consume('+'));
-            tokenList.TryConsumeNumber(out value);
-            Assert.AreEqual(value, 50);
+            Assert.AreEqual(tokenList.ExpectNumber(), 50);
             Assert.IsTrue(tokenList.Consume('-'));
-            tokenList.TryConsumeNumber(out value);
-            Assert.AreEqual(value, 60);
+            Assert.AreEqual(tokenList.ExpectNumber(), 60);
             Assert.IsTrue(tokenList.IsEof());
         }
     }

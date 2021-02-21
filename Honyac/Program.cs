@@ -20,38 +20,22 @@ namespace Honyac
             sb.AppendLine($"main:");
 
             var tokenList = TokenList.Tokenize(SourceCode);
-            var value = 0;
-            if (tokenList.TryConsumeNumber(out value))
-            {
-                sb.AppendLine($"  mov rax, {value}");
-            }
-            else
-            {
-                throw new ArgumentException($"Invalid Code:{SourceCode}");
-            }
+            sb.AppendLine($"  mov rax, {tokenList.ExpectNumber()}");
 
             while (!tokenList.IsEof())
             {
-                var cmd = string.Empty;
+                string cmd;
                 if (tokenList.Consume('+'))
                 {
                     cmd = "add";
                 }
-                else if (tokenList.Consume('-'))
-                {
-                    cmd = "sub";
-                }
                 else
                 {
-                    throw new ArgumentException($"Invalid Code:{SourceCode}");
+                    tokenList.Expect('-');
+                    cmd = "sub";
                 }
 
-                if (!tokenList.TryConsumeNumber(out value))
-                {
-                    throw new ArgumentException($"Invalid Code:{SourceCode}");
-                }
-
-                sb.AppendLine($"  {cmd} rax, {value}");
+                sb.AppendLine($"  {cmd} rax, {tokenList.ExpectNumber()}");
             }
 
             sb.AppendLine($"  ret");
