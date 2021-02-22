@@ -4,6 +4,16 @@ using System.Text;
 
 namespace Honyac
 {
+    /// <summary>
+    /// 抽象構文木
+    /// トークンリストを抽象構文技にマッピングする。
+    /// 
+    /// 以下のEBNF(Extended Backus-Naur form)を実装する
+    ///  expr    = mul ("+" mul | "-" mul)*
+    ///  mul     = primary("*" primary | "/" primary)*
+    ///  primary = num | "(" expr ")"
+    ///  
+    /// </summary>
     public class NodeMap
     {
         private TokenList TokenList { get; set; }
