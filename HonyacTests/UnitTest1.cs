@@ -66,5 +66,23 @@ namespace HonyacTests
             Assert.AreEqual(tokenList.ExpectNumber(), 60);
             Assert.IsTrue(tokenList.IsEof());
         }
+
+        [TestMethod]
+        public void Test04_NodeMapâêÕ()
+        {
+            var tokenList = TokenList.Tokenize("100 - ( 78 + 25 ) * 10 - 20 / 5");
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.AreEqual(nodeMap.Head.Kind, NodeKind.Sub);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Kind, NodeKind.Sub);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item2.Kind, NodeKind.Div);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item1.Value, 100);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Kind, NodeKind.Mul);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Kind, NodeKind.Add);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Nodes.Item2.Value, 10);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item1.Value, 78);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item2.Value, 25);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item2.Nodes.Item1.Value, 20);
+            Assert.AreEqual(nodeMap.Head.Nodes.Item2.Nodes.Item2.Value, 5);
+        }
     }
 }

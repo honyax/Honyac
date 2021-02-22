@@ -30,7 +30,7 @@ namespace Honyac
                     strIndex++;
                     continue;
                 }
-                if (str[strIndex] == '+' || str[strIndex] == '-')
+                if ("+-*/()".Contains(str[strIndex]))
                 {
                     AddToken(TokenKind.Reserved, 0, str[strIndex].ToString());
                     strIndex++;
