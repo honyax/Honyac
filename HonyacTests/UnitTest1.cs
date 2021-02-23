@@ -17,7 +17,8 @@ namespace HonyacTests
             outTest.AppendLine(".intel_syntax noprefix");
             outTest.AppendLine(".globl main");
             outTest.AppendLine("main:");
-            outTest.AppendLine("  mov rax, 100");
+            outTest.AppendLine("  push 100");
+            outTest.AppendLine("  pop rax");
             outTest.AppendLine("  ret");
 
             using (var output = new StringWriter())
@@ -38,10 +39,25 @@ namespace HonyacTests
             outTest.AppendLine(".intel_syntax noprefix");
             outTest.AppendLine(".globl main");
             outTest.AppendLine("main:");
-            outTest.AppendLine("  mov rax, 80");
-            outTest.AppendLine("  sub rax, 95");
-            outTest.AppendLine("  add rax, 50");
-            outTest.AppendLine("  sub rax, 20");
+
+
+            outTest.AppendLine("  push 80");
+            outTest.AppendLine("  push 95");
+            outTest.AppendLine("  pop rdi");
+            outTest.AppendLine("  pop rax");
+            outTest.AppendLine("  sub rax, rdi");
+            outTest.AppendLine("  push rax");
+            outTest.AppendLine("  push 50");
+            outTest.AppendLine("  pop rdi");
+            outTest.AppendLine("  pop rax");
+            outTest.AppendLine("  add rax, rdi");
+            outTest.AppendLine("  push rax");
+            outTest.AppendLine("  push 20");
+            outTest.AppendLine("  pop rdi");
+            outTest.AppendLine("  pop rax");
+            outTest.AppendLine("  sub rax, rdi");
+            outTest.AppendLine("  push rax");
+            outTest.AppendLine("  pop rax");
             outTest.AppendLine("  ret");
 
             using (var output = new StringWriter())

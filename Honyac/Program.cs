@@ -20,24 +20,10 @@ namespace Honyac
             sb.AppendLine($"main:");
 
             var tokenList = TokenList.Tokenize(SourceCode);
-            sb.AppendLine($"  mov rax, {tokenList.ExpectNumber()}");
+            var nodeMap = NodeMap.Create(tokenList);
+            Generator.Generate(sb, nodeMap.Head);
 
-            while (!tokenList.IsEof())
-            {
-                string cmd;
-                if (tokenList.Consume('+'))
-                {
-                    cmd = "add";
-                }
-                else
-                {
-                    tokenList.Expect('-');
-                    cmd = "sub";
-                }
-
-                sb.AppendLine($"  {cmd} rax, {tokenList.ExpectNumber()}");
-            }
-
+            sb.AppendLine($"  pop rax");
             sb.AppendLine($"  ret");
             return sb.ToString();
         }
