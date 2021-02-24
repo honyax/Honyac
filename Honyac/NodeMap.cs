@@ -10,7 +10,8 @@ namespace Honyac
     /// 
     /// 以下のEBNF(Extended Backus-Naur form)を実装する
     ///  expr    = mul ("+" mul | "-" mul)*
-    ///  mul     = primary("*" primary | "/" primary)*
+    ///  mul     = unary("*" unary | "/" unary)*
+    ///  unary   = ("+" | "-")? primary
     ///  primary = num | "(" expr ")"
     ///  
     /// </summary>
@@ -73,21 +74,37 @@ namespace Honyac
 
         private Node Mul()
         {
-            var node = Primary();
+            var node = Unary();
             for (; ; )
             {
                 if (TokenList.Consume('*'))
                 {
-                    node = NewNode(NodeKind.Mul, node, Primary());
+                    node = NewNode(NodeKind.Mul, node, Unary());
                 }
                 else if (TokenList.Consume('/'))
                 {
-                    node = NewNode(NodeKind.Div, node, Primary());
+                    node = NewNode(NodeKind.Div, node, Unary());
                 }
                 else
                 {
                     return node;
                 }
+            }
+        }
+
+        private Node Unary()
+        {
+            if (TokenList.Consume('+'))
+            {
+                return Primary();
+            }
+            else if (TokenList.Consume('-'))
+            {
+                return NewNode(NodeKind.Sub, NewNodeNum(0), Primary());
+            }
+            else
+            {
+                return Primary();
             }
         }
 

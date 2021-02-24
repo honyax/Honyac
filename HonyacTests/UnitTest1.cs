@@ -88,17 +88,32 @@ namespace HonyacTests
         {
             var tokenList = TokenList.Tokenize("100 - ( 78 + 25 ) * 10 - 20 / 5");
             var nodeMap = NodeMap.Create(tokenList);
-            Assert.AreEqual(nodeMap.Head.Kind, NodeKind.Sub);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Kind, NodeKind.Sub);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item2.Kind, NodeKind.Div);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item1.Value, 100);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Kind, NodeKind.Mul);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Kind, NodeKind.Add);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Nodes.Item2.Value, 10);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item1.Value, 78);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item2.Value, 25);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item2.Nodes.Item1.Value, 20);
-            Assert.AreEqual(nodeMap.Head.Nodes.Item2.Nodes.Item2.Value, 5);
+            var head = nodeMap.Head;
+            Assert.AreEqual(head.Kind, NodeKind.Sub);
+            Assert.AreEqual(head.Nodes.Item1.Kind, NodeKind.Sub);
+            Assert.AreEqual(head.Nodes.Item2.Kind, NodeKind.Div);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Value, 100);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Kind, NodeKind.Mul);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Kind, NodeKind.Add);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item2.Value, 10);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item1.Value, 78);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item2.Value, 25);
+            Assert.AreEqual(head.Nodes.Item2.Nodes.Item1.Value, 20);
+            Assert.AreEqual(head.Nodes.Item2.Nodes.Item2.Value, 5);
+        }
+
+        [TestMethod]
+        public void Test05_Unary()
+        {
+            var tokenList = TokenList.Tokenize("-10 + 20");
+            var nodeMap = NodeMap.Create(tokenList);
+            var head = nodeMap.Head;
+            Assert.AreEqual(head.Kind, NodeKind.Add);
+            Assert.AreEqual(head.Nodes.Item1.Kind, NodeKind.Sub);
+            Assert.AreEqual(head.Nodes.Item2.Value, 20); ;
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Kind, NodeKind.Num);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Value, 0);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Value, 10);
         }
     }
 }
