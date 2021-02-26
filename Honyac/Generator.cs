@@ -35,6 +35,26 @@ namespace Honyac
                     sb.AppendLine("  cqo");
                     sb.AppendLine("  idiv rdi");
                     break;
+                case NodeKind.Eq:
+                    sb.AppendLine("  cmp rax, rdi");
+                    sb.AppendLine("  sete al");
+                    sb.AppendLine("  movzb rax, al");
+                    break;
+                case NodeKind.Ne:
+                    sb.AppendLine("  cmp rax, rdi");
+                    sb.AppendLine("  setne al");
+                    sb.AppendLine("  movzb rax, al");
+                    break;
+                case NodeKind.Lt:
+                    sb.AppendLine("  cmp rax, rdi");
+                    sb.AppendLine("  setl al");
+                    sb.AppendLine("  movzb rax, al");
+                    break;
+                case NodeKind.Le:
+                    sb.AppendLine("  cmp rax, rdi");
+                    sb.AppendLine("  setle al");
+                    sb.AppendLine("  movzb rax, al");
+                    break;
             }
 
             sb.AppendLine("  push rax");
