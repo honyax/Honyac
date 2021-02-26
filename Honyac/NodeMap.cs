@@ -8,11 +8,22 @@ namespace Honyac
     /// 抽象構文木
     /// トークンリストを抽象構文技にマッピングする。
     /// 
-    /// 以下のEBNF(Extended Backus-Naur form)を実装する
-    ///  expr    = mul ("+" mul | "-" mul)*
-    ///  mul     = unary("*" unary | "/" unary)*
-    ///  unary   = ("+" | "-")? primary
-    ///  primary = num | "(" expr ")"
+    /// 以下が各項目を優先度の低い順に並べたもの。
+    ///  1. ==, !=
+    ///  2. <, <=, >, >=
+    ///  3. + -
+    ///  4. * /
+    ///  5. 単項+, 単項-
+    ///  6. ( )
+    /// 
+    /// 上記に従い、EBNF(Extended Backus-Naur form)を実装する
+    ///  expr       = equality
+    ///  equality   = relational ("==" relational | "!=" relational)*
+    ///  relational = add ("<" add | "<=" add | ">" add | ">=" add)*
+    ///  add        = mul ("+" mul | "-" mul)*
+    ///  mul        = unary ("*" unary | "/" unary)*
+    ///  unary      = ("+" | "-")? primary
+    ///  primary    = num | "(" expr ")"
     ///  
     /// </summary>
     public class NodeMap
@@ -53,6 +64,59 @@ namespace Honyac
         }
 
         private Node Expr()
+        {
+            return Equality();
+        }
+
+        private Node Equality()
+        {
+            var node = Relational();
+            for (; ; )
+            {
+                if (TokenList.Consume("=="))
+                {
+                    node = NewNode(NodeKind.Eq, node, Relational());
+                }
+                else if (TokenList.Consume("!="))
+                {
+                    node = NewNode(NodeKind.Ne, node, Relational());
+                }
+                else
+                {
+                    return node;
+                }
+            }
+        }
+
+        private Node Relational()
+        {
+            var node = Add();
+            for (; ; )
+            {
+                if (TokenList.Consume('<'))
+                {
+                    node = NewNode(NodeKind.Lt, node, Add());
+                }
+                else if (TokenList.Consume('>'))
+                {
+                    node = NewNode(NodeKind.Lt, Add(), node);
+                }
+                else if (TokenList.Consume("<="))
+                {
+                    node = NewNode(NodeKind.Le, node, Add());
+                }
+                else if (TokenList.Consume(">="))
+                {
+                    node = NewNode(NodeKind.Le, Add(), node);
+                }
+                else
+                {
+                    return node;
+                }
+            }
+        }
+
+        private Node Add()
         {
             var node = Mul();
             for (; ; )
@@ -146,6 +210,10 @@ namespace Honyac
         Sub,    // -
         Mul,    // *
         Div,    // /
+        Eq,     // ==
+        Ne,     // !=
+        Lt,     // <
+        Le,     // <=
         Num,    // 整数
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -114,6 +115,40 @@ namespace HonyacTests
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Kind, NodeKind.Num);
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Value, 0);
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Value, 10);
+        }
+
+        [TestMethod]
+        public void Test06_Comparators()
+        {
+            var comparators = new List<Tuple<NodeKind, string>>() {
+                { Tuple.Create(NodeKind.Eq, "==") },
+                { Tuple.Create(NodeKind.Ne, "!=") },
+                { Tuple.Create(NodeKind.Lt, "<") },
+                { Tuple.Create(NodeKind.Le, "<=") },
+            };
+            foreach (var tuple in comparators)
+            {
+                var tokenList = TokenList.Tokenize("10 " + tuple.Item2 + " 20");
+                var nodeMap = NodeMap.Create(tokenList);
+                var head = nodeMap.Head;
+                Assert.AreEqual(head.Kind, tuple.Item1);
+                Assert.AreEqual(head.Nodes.Item1.Value, 10);
+                Assert.AreEqual(head.Nodes.Item2.Value, 20);
+            }
+
+            var inverseComparators = new List<Tuple<NodeKind, string>>() {
+                { Tuple.Create(NodeKind.Lt, ">") },
+                { Tuple.Create(NodeKind.Le, ">=") },
+            };
+            foreach (var tuple in inverseComparators)
+            {
+                var tokenList = TokenList.Tokenize("10 " + tuple.Item2 + " 20");
+                var nodeMap = NodeMap.Create(tokenList);
+                var head = nodeMap.Head;
+                Assert.AreEqual(head.Kind, tuple.Item1);
+                Assert.AreEqual(head.Nodes.Item1.Value, 20);
+                Assert.AreEqual(head.Nodes.Item2.Value, 10);
+            }
         }
     }
 }

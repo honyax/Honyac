@@ -36,6 +36,28 @@ namespace Honyac
                     strIndex++;
                     continue;
                 }
+                if ("!><=".Contains(str[strIndex]))
+                {
+                    // 比較演算子は1文字の場合と2文字の場合とがある。以下の6種類。
+                    // !=, >=, <=, ==, >, <
+                    var c1 = str[strIndex];
+                    var c2 = str[strIndex + 1];
+                    if ((c1 == '!' && c2 == '=') ||
+                        (c1 == '>' && c2 == '=') ||
+                        (c1 == '<' && c2 == '=') ||
+                        (c1 == '=' && c2 == '='))
+                    {
+                        AddToken(TokenKind.Reserved, 0, string.Concat(c1, c2));
+                        strIndex += 2;
+                        continue;
+                    }
+                    else if (c1 == '>' || c1 == '<')
+                    {
+                        AddToken(TokenKind.Reserved, 0, c1.ToString());
+                        strIndex++;
+                        continue;
+                    }
+                }
                 if (char.IsDigit(str[strIndex]))
                 {
                     var value = 0;
@@ -66,6 +88,22 @@ namespace Honyac
         {
             var token = Current;
             if (token != null && token.Kind == TokenKind.Reserved && token.Str.Length == 1 && token.Str[0] == op)
+            {
+                CurrentIndex++;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 次のトークンが期待している記号の時は、トークンを一つ読み進めてtrueを返す
+        /// それ以外の場合はfalseを返す
+        /// </summary>
+        public bool Consume(string op)
+        {
+            var token = Current;
+            if (token != null && token.Kind == TokenKind.Reserved && string.Equals(token.Str, op))
             {
                 CurrentIndex++;
                 return true;
