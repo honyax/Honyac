@@ -10,6 +10,42 @@ namespace HonyacTests
     [TestClass]
     public class UnitTest1
     {
+        /// <summary>
+        /// NodeのValueとOffsetに不正な値が入っていないかをチェック
+        /// </summary>
+        bool ValidateNodeValuesAndOffsets(Node node)
+        {
+            if (node == null)
+                return true;
+
+            if (node.Nodes != null)
+            {
+                if (!ValidateNodeValuesAndOffsets(node.Nodes.Item1))
+                    return false;
+
+                if (!ValidateNodeValuesAndOffsets(node.Nodes.Item2))
+                    return false;
+            }
+
+            if (node.Kind != NodeKind.Num && node.Value != 0)
+                return false;
+
+            if (node.Kind != NodeKind.Lvar && node.Offset != 0)
+                return false;
+
+            return true;
+        }
+
+        bool ValidateNodeValuesAndOffsets(NodeMap nodeMap)
+        {
+            foreach (var node in nodeMap.Nodes)
+            {
+                if (!ValidateNodeValuesAndOffsets(node))
+                    return false;
+            }
+            return true;
+        }
+
         [TestMethod]
         public void Test01_単一の数字をコンパイル()
         {
@@ -102,6 +138,7 @@ namespace HonyacTests
         {
             var tokenList = TokenList.Tokenize("100 - ( 78 + 25 ) * 10 - 20 / 5;");
             var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var head = nodeMap.Head;
             Assert.AreEqual(head.Kind, NodeKind.Sub);
             Assert.AreEqual(head.Nodes.Item1.Kind, NodeKind.Sub);
@@ -121,6 +158,7 @@ namespace HonyacTests
         {
             var tokenList = TokenList.Tokenize("-10 + 20;");
             var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var head = nodeMap.Head;
             Assert.AreEqual(head.Kind, NodeKind.Add);
             Assert.AreEqual(head.Nodes.Item1.Kind, NodeKind.Sub);
@@ -143,6 +181,7 @@ namespace HonyacTests
             {
                 var tokenList = TokenList.Tokenize("10 " + tuple.Item2 + " 20;");
                 var nodeMap = NodeMap.Create(tokenList);
+                Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
                 var head = nodeMap.Head;
                 Assert.AreEqual(head.Kind, tuple.Item1);
                 Assert.AreEqual(head.Nodes.Item1.Value, 10);
@@ -157,6 +196,7 @@ namespace HonyacTests
             {
                 var tokenList = TokenList.Tokenize("10 " + tuple.Item2 + " 20;");
                 var nodeMap = NodeMap.Create(tokenList);
+                Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
                 var head = nodeMap.Head;
                 Assert.AreEqual(head.Kind, tuple.Item1);
                 Assert.AreEqual(head.Nodes.Item1.Value, 20);
@@ -173,6 +213,7 @@ namespace HonyacTests
             sb.Append("a = z + a;");
             var tokenList = TokenList.Tokenize(sb.ToString());
             var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             Assert.AreEqual(nodeMap.Nodes.Count, 3);
             var n0 = nodeMap.Nodes[0];
             var n1 = nodeMap.Nodes[1];
