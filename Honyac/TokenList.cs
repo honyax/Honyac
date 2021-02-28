@@ -30,9 +30,9 @@ namespace Honyac
                     strIndex++;
                     continue;
                 }
-                if ("+-*/()".Contains(str[strIndex]))
+                if ("+-*/();".Contains(str[strIndex]))
                 {
-                    AddToken(TokenKind.Reserved, 0, str[strIndex].ToString());
+                    AddToken(TokenKind.Punct, 0, str[strIndex].ToString());
                     strIndex++;
                     continue;
                 }
@@ -47,13 +47,13 @@ namespace Honyac
                         (c1 == '<' && c2 == '=') ||
                         (c1 == '=' && c2 == '='))
                     {
-                        AddToken(TokenKind.Reserved, 0, string.Concat(c1, c2));
+                        AddToken(TokenKind.Punct, 0, string.Concat(c1, c2));
                         strIndex += 2;
                         continue;
                     }
-                    else if (c1 == '>' || c1 == '<')
+                    else if (c1 == '>' || c1 == '<' || c1 == '=')
                     {
-                        AddToken(TokenKind.Reserved, 0, c1.ToString());
+                        AddToken(TokenKind.Punct, 0, c1.ToString());
                         strIndex++;
                         continue;
                     }
@@ -66,6 +66,12 @@ namespace Honyac
                         value = value * 10 + int.Parse(str[strIndex].ToString());
                     }
                     AddToken(TokenKind.Num, value, value.ToString());
+                    continue;
+                }
+                if (char.IsLower(str[strIndex]))
+                {
+                    AddToken(TokenKind.Ident, 0, str[strIndex].ToString());
+                    strIndex++;
                     continue;
                 }
 
@@ -87,7 +93,7 @@ namespace Honyac
         public bool Consume(char op)
         {
             var token = Current;
-            if (token != null && token.Kind == TokenKind.Reserved && token.Str.Length == 1 && token.Str[0] == op)
+            if (token != null && token.Kind == TokenKind.Punct && token.Str.Length == 1 && token.Str[0] == op)
             {
                 CurrentIndex++;
                 return true;
@@ -103,13 +109,30 @@ namespace Honyac
         public bool Consume(string op)
         {
             var token = Current;
-            if (token != null && token.Kind == TokenKind.Reserved && string.Equals(token.Str, op))
+            if (token != null && token.Kind == TokenKind.Punct && string.Equals(token.Str, op))
             {
                 CurrentIndex++;
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 次のトークンが識別子トークンの場合は、トークンを一つ進めてそのトークンを返す。
+        /// それ以外の場合はnullを返す
+        /// </summary>
+        /// <returns></returns>
+        public Token ConsumeIdent()
+        {
+            var token = Current;
+            if (token != null && token.Kind == TokenKind.Ident)
+            {
+                CurrentIndex++;
+                return token;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -120,7 +143,7 @@ namespace Honyac
         public void Expect(char op)
         {
             var token = Current;
-            if (token != null && token.Kind == TokenKind.Reserved && token.Str.Length == 1 && token.Str[0] == op)
+            if (token != null && token.Kind == TokenKind.Punct && token.Str.Length == 1 && token.Str[0] == op)
             {
                 CurrentIndex++;
                 return;
@@ -170,7 +193,8 @@ namespace Honyac
     /// </summary>
     public enum TokenKind
     {
-        Reserved,       // 記号
-        Num,            // 整数トークン
+        Punct,  // 記号
+        Ident,  // 識別子
+        Num,    // 整数トークン
     }
 }

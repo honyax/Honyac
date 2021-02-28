@@ -19,12 +19,29 @@ namespace Honyac
             sb.AppendLine($".globl main");
             sb.AppendLine($"main:");
 
+            // プロローグ
+            // 変数26個分の領域を確保する
+            sb.AppendLine($"  push rbp");
+            sb.AppendLine($"  mov rbp, rsp");
+            sb.AppendLine($"  sub rsp, 208");
+
             var tokenList = TokenList.Tokenize(SourceCode);
             var nodeMap = NodeMap.Create(tokenList);
-            Generator.Generate(sb, nodeMap.Head);
+            foreach (var node in nodeMap.Nodes)
+            {
+                Generator.Generate(sb, node);
 
-            sb.AppendLine($"  pop rax");
+                // 式の評価結果としてスタックに一つの値が残っているはずなので、
+                // スタックが溢れないようにポップしておく
+                sb.AppendLine($"  pop rax");
+            }
+
+            // エピローグ
+            // 最後の式の結果がRAXに残っているのでそれが返り値になる
+            sb.AppendLine($"  mov rsp, rbp");
+            sb.AppendLine($"  pop rbp");
             sb.AppendLine($"  ret");
+
             return sb.ToString();
         }
 

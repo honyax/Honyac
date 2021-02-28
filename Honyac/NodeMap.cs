@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
 
 namespace Honyac
 {
@@ -17,20 +17,25 @@ namespace Honyac
     ///  6. ( )
     /// 
     /// 上記に従い、EBNF(Extended Backus-Naur form)を実装する
-    ///  expr       = equality
+    ///  program    = stmt*
+    ///  stmt       = expr ";"
+    ///  expr       = assign
+    ///  assign     = equality ( "=" assign)?
     ///  equality   = relational ("==" relational | "!=" relational)*
     ///  relational = add ("<" add | "<=" add | ">" add | ">=" add)*
     ///  add        = mul ("+" mul | "-" mul)*
     ///  mul        = unary ("*" unary | "/" unary)*
     ///  unary      = ("+" | "-")? primary
-    ///  primary    = num | "(" expr ")"
+    ///  primary    = num | ident | "(" expr ")"
     ///  
     /// </summary>
     public class NodeMap
     {
         private TokenList TokenList { get; set; }
 
-        public Node Head { get; set; }
+        public Node Head { get { return this.Nodes.FirstOrDefault(); } }
+
+        public List<Node> Nodes { get; set; } = new List<Node>();
 
         private NodeMap() { }
 
@@ -44,7 +49,7 @@ namespace Honyac
 
         private void Analyze()
         {
-            this.Head = Expr();
+            Program();
         }
 
         private Node NewNode(NodeKind kind, Node lhs, Node rhs)
@@ -63,9 +68,42 @@ namespace Honyac
             return node;
         }
 
+        private Node NewNodeIdent(int offset)
+        {
+            var node = new Node();
+            node.Kind = NodeKind.Lvar;
+            node.Offset = offset;
+            return node;
+        }
+
+        private void Program()
+        {
+            while (!TokenList.IsEof())
+            {
+                Nodes.Add(Stmt());
+            }
+        }
+
+        private Node Stmt()
+        {
+            var node = Expr();
+            TokenList.Expect(';');
+            return node;
+        }
+
         private Node Expr()
         {
-            return Equality();
+            return Assign();
+        }
+
+        private Node Assign()
+        {
+            var node = Equality();
+            if (TokenList.Consume('='))
+            {
+                node = NewNode(NodeKind.Assign, node, Assign());
+            }
+            return node;
         }
 
         private Node Equality()
@@ -181,6 +219,13 @@ namespace Honyac
                 TokenList.Expect(')');
                 return node;
             }
+
+            var identToken = TokenList.ConsumeIdent();
+            if (identToken != null)
+            {
+                var offset = (identToken.Str[0] - 'a' + 1) * 8;
+                return NewNodeIdent(offset);
+            }
             else
             {
                 var value = TokenList.ExpectNumber();
@@ -199,6 +244,14 @@ namespace Honyac
 
         /// <summary>KindがNumの場合の数値</summary>
         public int Value { get; set; }
+
+        /// <summary>KindがLvarの場合の変数へのオフセット値</summary>
+        public int Offset { get; set; }
+
+        public override string ToString()
+        {
+            return $"Kind:{Kind} Value:{Value} Offset:{Offset}";
+        }
     }
 
     /// <summary>
@@ -214,6 +267,8 @@ namespace Honyac
         Ne,     // !=
         Lt,     // <
         Le,     // <=
+        Assign, // =
+        Lvar,   // ローカル変数
         Num,    // 整数
     }
 }
