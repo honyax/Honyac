@@ -37,6 +37,8 @@ namespace Honyac
 
         public List<Node> Nodes { get; set; } = new List<Node>();
 
+        public List<LVar> LVars { get; set; } = new List<LVar>();
+
         private NodeMap() { }
 
         public static NodeMap Create(TokenList tokenList)
@@ -49,7 +51,27 @@ namespace Honyac
 
         private void Analyze()
         {
+            CreateLVars();
             Program();
+        }
+
+        private void CreateLVars()
+        {
+            foreach (var token in TokenList)
+            {
+                if (token.Kind != TokenKind.Ident)
+                    continue;
+
+                if (LVars.Exists((lvar) => lvar.Name == token.Str))
+                    continue;
+
+                var lvar = new LVar
+                {
+                    Name = token.Str,
+                    Offset = (LVars.Count + 1) * 8,
+                };
+                LVars.Add(lvar);
+            }
         }
 
         private Node NewNode(NodeKind kind, Node lhs, Node rhs)
@@ -223,7 +245,7 @@ namespace Honyac
             var identToken = TokenList.ConsumeIdent();
             if (identToken != null)
             {
-                var offset = (identToken.Str[0] - 'a' + 1) * 8;
+                var offset = LVars.FirstOrDefault(lvar => lvar.Name == identToken.Str).Offset;
                 return NewNodeIdent(offset);
             }
             else
@@ -270,5 +292,14 @@ namespace Honyac
         Assign, // =
         Lvar,   // ローカル変数
         Num,    // 整数
+    }
+
+    /// <summary>
+    /// 変数
+    /// </summary>
+    public class LVar
+    {
+        public string Name { get; set; }
+        public int Offset { get; set; }
     }
 }

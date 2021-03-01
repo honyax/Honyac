@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 
 namespace Honyac
@@ -23,10 +24,17 @@ namespace Honyac
             // 変数26個分の領域を確保する
             sb.AppendLine($"  push rbp");
             sb.AppendLine($"  mov rbp, rsp");
-            sb.AppendLine($"  sub rsp, 208");
 
             var tokenList = TokenList.Tokenize(SourceCode);
             var nodeMap = NodeMap.Create(tokenList);
+
+            // 変数がある場合は変数の領域を確保
+            if (nodeMap.LVars.Any())
+            {
+                var maxOffset = nodeMap.LVars.Max(lv => lv.Offset);
+                sb.AppendLine($"  sub rsp, {maxOffset}");
+            }
+
             foreach (var node in nodeMap.Nodes)
             {
                 Generator.Generate(sb, node);

@@ -68,15 +68,36 @@ namespace Honyac
                     AddToken(TokenKind.Num, value, value.ToString());
                     continue;
                 }
-                if (char.IsLower(str[strIndex]))
+                if (IsIdentHead(str[strIndex]))
                 {
-                    AddToken(TokenKind.Ident, 0, str[strIndex].ToString());
+                    // 識別子の開始インデックス(startIndex)と終了インデックス(strIndex)を求める
+                    // 但し終了インデックスは識別子に含まない
+                    var startIndex = strIndex;
                     strIndex++;
+                    for (; IsIdent(str[strIndex]) && strIndex < str.Length; strIndex++)
+                        ;
+                    AddToken(TokenKind.Ident, 0, str.Substring(startIndex, strIndex - startIndex));
                     continue;
                 }
 
                 throw new ArgumentException($"Invalid String:{str} Index:{strIndex} char:{str[strIndex]}");
             }
+        }
+
+        /// <summary>
+        /// 識別子の先頭として有効な文字
+        /// </summary>
+        private bool IsIdentHead(char c)
+        {
+            return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_';
+        }
+
+        /// <summary>
+        /// 識別子の戦闘以外で有効な文字
+        /// </summary>
+        private bool IsIdent(char c)
+        {
+            return IsIdentHead(c) || ('0' <= c && c <= '9');
         }
 
         public static TokenList Tokenize(string str)

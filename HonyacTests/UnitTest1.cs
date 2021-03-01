@@ -56,7 +56,6 @@ namespace HonyacTests
             outTest.AppendLine("main:");
             outTest.AppendLine("  push rbp");
             outTest.AppendLine("  mov rbp, rsp");
-            outTest.AppendLine("  sub rsp, 208");
 
             outTest.AppendLine("  push 100");
             outTest.AppendLine("  pop rax");
@@ -85,7 +84,6 @@ namespace HonyacTests
             outTest.AppendLine("main:");
             outTest.AppendLine("  push rbp");
             outTest.AppendLine("  mov rbp, rsp");
-            outTest.AppendLine("  sub rsp, 208");
 
             outTest.AppendLine("  push 80");
             outTest.AppendLine("  push 95");
@@ -220,12 +218,37 @@ namespace HonyacTests
             var n2 = nodeMap.Nodes[2];
             Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
             Assert.AreEqual(n0.Nodes.Item2.Value, 10);
-            Assert.AreEqual(n1.Nodes.Item1.Offset, 208);
+            Assert.AreEqual(n1.Nodes.Item1.Offset, 16);
             Assert.AreEqual(n1.Nodes.Item2.Value, 50);
             Assert.AreEqual(n2.Nodes.Item1.Offset, 8);
             Assert.AreEqual(n2.Nodes.Item2.Kind, NodeKind.Add);
-            Assert.AreEqual(n2.Nodes.Item2.Nodes.Item1.Offset, 208);
+            Assert.AreEqual(n2.Nodes.Item2.Nodes.Item1.Offset, 16);
             Assert.AreEqual(n2.Nodes.Item2.Nodes.Item2.Offset, 8);
+        }
+
+        [TestMethod]
+        public void Test08_ï°êîï∂éöÇÃÉçÅ[ÉJÉãïœêî()
+        {
+            var sb = new StringBuilder();
+            sb.Append("foo = 1;");
+            sb.Append("bar = 2 + 3;");
+            sb.Append("foo + bar;");
+            var tokenList = TokenList.Tokenize(sb.ToString());
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+            Assert.AreEqual(nodeMap.Nodes.Count, 3);
+            var n0 = nodeMap.Nodes[0];
+            var n1 = nodeMap.Nodes[1];
+            var n2 = nodeMap.Nodes[2];
+            Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
+            Assert.AreEqual(n0.Nodes.Item2.Value, 1);
+            Assert.AreEqual(n1.Nodes.Item1.Offset, 16);
+            Assert.AreEqual(n1.Nodes.Item2.Kind, NodeKind.Add);
+            Assert.AreEqual(n1.Nodes.Item2.Nodes.Item1.Value, 2);
+            Assert.AreEqual(n1.Nodes.Item2.Nodes.Item2.Value, 3);
+            Assert.AreEqual(n2.Kind, NodeKind.Add);
+            Assert.AreEqual(n2.Nodes.Item1.Offset, 8);
+            Assert.AreEqual(n2.Nodes.Item2.Offset, 16);
         }
     }
 }
