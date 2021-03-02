@@ -19,6 +19,7 @@ namespace Honyac
     /// 上記に従い、EBNF(Extended Backus-Naur form)を実装する
     ///  program    = stmt*
     ///  stmt       = expr ";"
+    ///             | "return" expr ";"
     ///  expr       = assign
     ///  assign     = equality ( "=" assign)?
     ///  equality   = relational ("==" relational | "!=" relational)*
@@ -108,7 +109,18 @@ namespace Honyac
 
         private Node Stmt()
         {
-            var node = Expr();
+            Node node;
+
+            if (TokenList.Consume(TokenKind.Return))
+            {
+                node = new Node();
+                node.Kind = NodeKind.Return;
+                node.Nodes = Tuple.Create(Expr(), null as Node);
+            }
+            else
+            {
+                node = Expr();
+            }
             TokenList.Expect(';');
             return node;
         }
@@ -290,6 +302,7 @@ namespace Honyac
         Lt,     // <
         Le,     // <=
         Assign, // =
+        Return, // return
         Lvar,   // ローカル変数
         Num,    // 整数
     }

@@ -43,6 +43,15 @@ namespace Honyac
                     sb.AppendLine($"  push rdi");
                     return;
 
+                case NodeKind.Return:
+                    Generate(sb, node.Nodes.Item1);
+
+                    sb.AppendLine($"  pop rax");
+                    sb.AppendLine($"  mov rsp, rbp");
+                    sb.AppendLine($"  pop rbp");
+                    sb.AppendLine($"  ret");
+                    return;
+
                 default:
                     break;
             }

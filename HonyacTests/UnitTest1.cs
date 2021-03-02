@@ -250,5 +250,25 @@ namespace HonyacTests
             Assert.AreEqual(n2.Nodes.Item1.Offset, 8);
             Assert.AreEqual(n2.Nodes.Item2.Offset, 16);
         }
+
+        [TestMethod]
+        public void Test09_return•¶()
+        {
+            var sb = new StringBuilder();
+            sb.Append("abc = 15;");
+            sb.Append("return abc;");
+            var tokenList = TokenList.Tokenize(sb.ToString());
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+            Assert.AreEqual(nodeMap.Nodes.Count, 2);
+            var n0 = nodeMap.Nodes[0];
+            var n1 = nodeMap.Nodes[1];
+            Assert.AreEqual(n0.Kind, NodeKind.Assign);
+            Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
+            Assert.AreEqual(n0.Nodes.Item2.Value, 15);
+            Assert.AreEqual(n1.Kind, NodeKind.Return);
+            Assert.AreEqual(n1.Nodes.Item1.Offset, 8);
+            Assert.IsNull(n1.Nodes.Item2);
+        }
     }
 }

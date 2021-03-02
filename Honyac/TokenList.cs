@@ -58,6 +58,12 @@ namespace Honyac
                         continue;
                     }
                 }
+                if (strIndex + 6 < str.Length && "return".Equals(str.Substring(strIndex, 6)) && !IsIdent(str[strIndex + 6]))
+                {
+                    AddToken(TokenKind.Return, 0, "return");
+                    strIndex += 6;
+                    continue;
+                }
                 if (char.IsDigit(str[strIndex]))
                 {
                     var value = 0;
@@ -156,6 +162,18 @@ namespace Honyac
             return null;
         }
 
+        public bool Consume(TokenKind kind)
+        {
+            var token = Current;
+            if (token != null && token.Kind == kind)
+            {
+                CurrentIndex++;
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// 次のトークンが期待している記号の時は、トークンを一つ読みすすめる
         /// それ以外の場合はエラーを報告する
@@ -216,6 +234,7 @@ namespace Honyac
     {
         Punct,  // 記号
         Ident,  // 識別子
+        Return, // return
         Num,    // 整数トークン
     }
 }
