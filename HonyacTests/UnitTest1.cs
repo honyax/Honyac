@@ -33,7 +33,7 @@ namespace HonyacTests
             if (node.Kind != NodeKind.Lvar && node.Offset != 0)
                 return false;
 
-            if (node.Kind != NodeKind.If && node.Condition != null)
+            if (node.Kind != NodeKind.If && node.Kind != NodeKind.While && node.Condition != null)
                 return false;
 
             return true;
@@ -293,6 +293,20 @@ namespace HonyacTests
             Assert.AreEqual(n0.Nodes.Item1.Nodes.Item1.Value, 2);
             Assert.AreEqual(n0.Nodes.Item2.Kind, NodeKind.Return);
             Assert.AreEqual(n0.Nodes.Item2.Nodes.Item1.Value, 3);
+        }
+
+        [TestMethod]
+        public void Test11_while•¶()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("a = 0;");
+            sb.AppendLine("b = 3;");
+            sb.AppendLine("while ( a < b )");
+            sb.AppendLine("  a = a + 1;");
+            sb.AppendLine("return a;");
+            var tokenList = TokenList.Tokenize(sb.ToString());
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
         }
     }
 }

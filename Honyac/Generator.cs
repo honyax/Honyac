@@ -47,19 +47,31 @@ namespace Honyac
                     return;
 
                 case NodeKind.If:
-                    int c = Count();
+                    int ifCnt = Count();
                     Generate(sb, node.Condition);
                     sb.AppendLine($"  pop rax");
                     sb.AppendLine($"  cmp rax, 0");
-                    sb.AppendLine($"  je .L.else.{c}");
+                    sb.AppendLine($"  je .L.else.{ifCnt}");
                     Generate(sb, node.Nodes.Item1);
-                    sb.AppendLine($"  jmp .L.end.{c}");
-                    sb.AppendLine($".L.else.{c}:");
+                    sb.AppendLine($"  jmp .L.end.{ifCnt}");
+                    sb.AppendLine($".L.else.{ifCnt}:");
                     if (node.Nodes.Item2 != null)
                     {
                         Generate(sb, node.Nodes.Item2);
                     }
-                    sb.AppendLine($".L.end.{c}:");
+                    sb.AppendLine($".L.end.{ifCnt}:");
+                    return;
+
+                case NodeKind.While:
+                    int whileCnt = Count();
+                    sb.AppendLine($".L.while.{whileCnt}:");
+                    Generate(sb, node.Condition);
+                    sb.AppendLine($"  pop rax");
+                    sb.AppendLine($"  cmp rax, 0");
+                    sb.AppendLine($"  je .L.end.{whileCnt}");
+                    Generate(sb, node.Nodes.Item1);
+                    sb.AppendLine($"  jmp .L.while.{whileCnt}");
+                    sb.AppendLine($".L.end.{whileCnt}:");
                     return;
 
                 case NodeKind.Return:

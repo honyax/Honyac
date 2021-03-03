@@ -70,6 +70,12 @@ namespace Honyac
                     strIndex += 4;
                     continue;
                 }
+                if (IsKeyword(str, strIndex, "while"))
+                {
+                    AddToken(TokenKind.While, 0, "while");
+                    strIndex += 5;
+                    continue;
+                }
                 if (IsKeyword(str, strIndex, "return"))
                 {
                     AddToken(TokenKind.Return, 0, "return");
@@ -259,6 +265,7 @@ namespace Honyac
         Ident,  // 識別子
         If,     // if
         Else,   // else
+        While,  // while
         Return, // return
         Num,    // 整数トークン
     }

@@ -20,6 +20,7 @@ namespace Honyac
     ///  program    = stmt*
     ///  stmt       = expr ";"
     ///             | "if" "(" expr ")" stmt ("else" stmt)?
+    ///             | "while" "(" expr ")" stmt
     ///             | "return" expr ";"
     ///  expr       = assign
     ///  assign     = equality ( "=" assign)?
@@ -126,6 +127,15 @@ namespace Honyac
                     elseNode = Stmt();
                 }
                 node.Nodes = Tuple.Create(thenNode, elseNode);
+            }
+            else if (TokenList.Consume(TokenKind.While))
+            {
+                node = new Node();
+                node.Kind = NodeKind.While;
+                TokenList.Expect('(');
+                node.Condition = Expr();
+                TokenList.Expect(')');
+                node.Nodes = Tuple.Create(Stmt(), null as Node);
             }
             else if (TokenList.Consume(TokenKind.Return))
             {
@@ -323,6 +333,7 @@ namespace Honyac
         Le,     // <=
         Assign, // =
         If,     // if
+        While,  // while
         Return, // return
         Lvar,   // ローカル変数
         Num,    // 整数
