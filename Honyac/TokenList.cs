@@ -58,7 +58,19 @@ namespace Honyac
                         continue;
                     }
                 }
-                if (strIndex + 6 < str.Length && "return".Equals(str.Substring(strIndex, 6)) && !IsIdent(str[strIndex + 6]))
+                if (IsKeyword(str, strIndex, "if"))
+                {
+                    AddToken(TokenKind.If, 0, "if");
+                    strIndex += 2;
+                    continue;
+                }
+                if (IsKeyword(str, strIndex, "else"))
+                {
+                    AddToken(TokenKind.Else, 0, "else");
+                    strIndex += 4;
+                    continue;
+                }
+                if (IsKeyword(str, strIndex, "return"))
                 {
                     AddToken(TokenKind.Return, 0, "return");
                     strIndex += 6;
@@ -88,6 +100,17 @@ namespace Honyac
 
                 throw new ArgumentException($"Invalid String:{str} Index:{strIndex} char:{str[strIndex]}");
             }
+        }
+
+        private bool IsKeyword(string str, int strIndex, string keyword)
+        {
+            var len = keyword.Length;
+            if (strIndex + len < str.Length && keyword.Equals(str.Substring(strIndex, len)) && !IsIdent(str[strIndex + len]))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -234,6 +257,8 @@ namespace Honyac
     {
         Punct,  // 記号
         Ident,  // 識別子
+        If,     // if
+        Else,   // else
         Return, // return
         Num,    // 整数トークン
     }

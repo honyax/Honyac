@@ -6,7 +6,10 @@ namespace Honyac
 {
     public class Generator
     {
-        private static void GenerateLval(StringBuilder sb, Node node)
+        private int _counter = 1;
+        private int Count() { return _counter++; }
+
+        private void GenerateLval(StringBuilder sb, Node node)
         {
             if (node.Kind != NodeKind.Lvar)
             {
@@ -18,7 +21,7 @@ namespace Honyac
             sb.AppendLine($"  push rax");
         }
 
-        public static void Generate(StringBuilder sb, Node node)
+        public void Generate(StringBuilder sb, Node node)
         {
             switch (node.Kind)
             {
@@ -41,6 +44,22 @@ namespace Honyac
                     sb.AppendLine($"  pop rax");
                     sb.AppendLine($"  mov [rax], rdi");
                     sb.AppendLine($"  push rdi");
+                    return;
+
+                case NodeKind.If:
+                    int c = Count();
+                    Generate(sb, node.Condition);
+                    sb.AppendLine($"  pop rax");
+                    sb.AppendLine($"  cmp rax, 0");
+                    sb.AppendLine($"  je .L.else.{c}");
+                    Generate(sb, node.Nodes.Item1);
+                    sb.AppendLine($"  jmp .L.end.{c}");
+                    sb.AppendLine($".L.else.{c}:");
+                    if (node.Nodes.Item2 != null)
+                    {
+                        Generate(sb, node.Nodes.Item2);
+                    }
+                    sb.AppendLine($".L.end.{c}:");
                     return;
 
                 case NodeKind.Return:

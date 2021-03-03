@@ -19,6 +19,7 @@ namespace Honyac
     /// 上記に従い、EBNF(Extended Backus-Naur form)を実装する
     ///  program    = stmt*
     ///  stmt       = expr ";"
+    ///             | "if" "(" expr ")" stmt ("else" stmt)?
     ///             | "return" expr ";"
     ///  expr       = assign
     ///  assign     = equality ( "=" assign)?
@@ -111,17 +112,33 @@ namespace Honyac
         {
             Node node;
 
-            if (TokenList.Consume(TokenKind.Return))
+            if (TokenList.Consume(TokenKind.If))
+            {
+                node = new Node();
+                node.Kind = NodeKind.If;
+                TokenList.Expect('(');
+                node.Condition = Expr();
+                TokenList.Expect(')');
+                var thenNode = Stmt();
+                Node elseNode = null;
+                if (TokenList.Consume(TokenKind.Else))
+                {
+                    elseNode = Stmt();
+                }
+                node.Nodes = Tuple.Create(thenNode, elseNode);
+            }
+            else if (TokenList.Consume(TokenKind.Return))
             {
                 node = new Node();
                 node.Kind = NodeKind.Return;
                 node.Nodes = Tuple.Create(Expr(), null as Node);
+                TokenList.Expect(';');
             }
             else
             {
                 node = Expr();
+                TokenList.Expect(';');
             }
-            TokenList.Expect(';');
             return node;
         }
 
@@ -282,6 +299,9 @@ namespace Honyac
         /// <summary>KindがLvarの場合の変数へのオフセット値</summary>
         public int Offset { get; set; }
 
+        /// <summary>KindがIfの場合の条件ノード</summary>
+        public Node Condition { get; set; }
+
         public override string ToString()
         {
             return $"Kind:{Kind} Value:{Value} Offset:{Offset}";
@@ -302,6 +322,7 @@ namespace Honyac
         Lt,     // <
         Le,     // <=
         Assign, // =
+        If,     // if
         Return, // return
         Lvar,   // ローカル変数
         Num,    // 整数

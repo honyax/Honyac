@@ -13,17 +13,17 @@ namespace HonyacTests
         /// <summary>
         /// NodeのValueとOffsetに不正な値が入っていないかをチェック
         /// </summary>
-        bool ValidateNodeValuesAndOffsets(Node node)
+        bool ValidateNode(Node node)
         {
             if (node == null)
                 return true;
 
             if (node.Nodes != null)
             {
-                if (!ValidateNodeValuesAndOffsets(node.Nodes.Item1))
+                if (!ValidateNode(node.Nodes.Item1))
                     return false;
 
-                if (!ValidateNodeValuesAndOffsets(node.Nodes.Item2))
+                if (!ValidateNode(node.Nodes.Item2))
                     return false;
             }
 
@@ -33,6 +33,9 @@ namespace HonyacTests
             if (node.Kind != NodeKind.Lvar && node.Offset != 0)
                 return false;
 
+            if (node.Kind != NodeKind.If && node.Condition != null)
+                return false;
+
             return true;
         }
 
@@ -40,7 +43,7 @@ namespace HonyacTests
         {
             foreach (var node in nodeMap.Nodes)
             {
-                if (!ValidateNodeValuesAndOffsets(node))
+                if (!ValidateNode(node))
                     return false;
             }
             return true;
@@ -206,9 +209,9 @@ namespace HonyacTests
         public void Test07_1文字変数()
         {
             var sb = new StringBuilder();
-            sb.Append("a = 10;");
-            sb.Append("z = 50;");
-            sb.Append("a = z + a;");
+            sb.AppendLine("a = 10;");
+            sb.AppendLine("z = 50;");
+            sb.AppendLine("a = z + a;");
             var tokenList = TokenList.Tokenize(sb.ToString());
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
@@ -230,9 +233,9 @@ namespace HonyacTests
         public void Test08_複数文字のローカル変数()
         {
             var sb = new StringBuilder();
-            sb.Append("foo = 1;");
-            sb.Append("bar = 2 + 3;");
-            sb.Append("foo + bar;");
+            sb.AppendLine("foo = 1;");
+            sb.AppendLine("bar = 2 + 3;");
+            sb.AppendLine("foo + bar;");
             var tokenList = TokenList.Tokenize(sb.ToString());
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
@@ -255,8 +258,8 @@ namespace HonyacTests
         public void Test09_return文()
         {
             var sb = new StringBuilder();
-            sb.Append("abc = 15;");
-            sb.Append("return abc;");
+            sb.AppendLine("abc = 15;");
+            sb.AppendLine("return abc;");
             var tokenList = TokenList.Tokenize(sb.ToString());
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
@@ -269,6 +272,27 @@ namespace HonyacTests
             Assert.AreEqual(n1.Kind, NodeKind.Return);
             Assert.AreEqual(n1.Nodes.Item1.Offset, 8);
             Assert.IsNull(n1.Nodes.Item2);
+        }
+
+        [TestMethod]
+        public void Test10_if文()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("if ( 1 )");
+            sb.AppendLine("  return 2;");
+            sb.AppendLine("else");
+            sb.AppendLine("  return 3;");
+            var tokenList = TokenList.Tokenize(sb.ToString());
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+            Assert.AreEqual(nodeMap.Nodes.Count, 1);
+            var n0 = nodeMap.Nodes[0];
+            Assert.AreEqual(n0.Kind, NodeKind.If);
+            Assert.AreEqual(n0.Condition.Value, 1);
+            Assert.AreEqual(n0.Nodes.Item1.Kind, NodeKind.Return);
+            Assert.AreEqual(n0.Nodes.Item1.Nodes.Item1.Value, 2);
+            Assert.AreEqual(n0.Nodes.Item2.Kind, NodeKind.Return);
+            Assert.AreEqual(n0.Nodes.Item2.Nodes.Item1.Value, 3);
         }
     }
 }

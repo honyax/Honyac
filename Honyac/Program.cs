@@ -27,6 +27,7 @@ namespace Honyac
 
             var tokenList = TokenList.Tokenize(SourceCode);
             var nodeMap = NodeMap.Create(tokenList);
+            var generator = new Generator();
 
             // 変数がある場合は変数の領域を確保
             if (nodeMap.LVars.Any())
@@ -37,7 +38,7 @@ namespace Honyac
 
             foreach (var node in nodeMap.Nodes)
             {
-                Generator.Generate(sb, node);
+                generator.Generate(sb, node);
 
                 // 式の評価結果としてスタックに一つの値が残っているはずなので、
                 // スタックが溢れないようにポップしておく
