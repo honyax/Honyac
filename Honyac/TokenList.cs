@@ -76,6 +76,12 @@ namespace Honyac
                     strIndex += 5;
                     continue;
                 }
+                if (IsKeyword(str, strIndex, "for"))
+                {
+                    AddToken(TokenKind.For, 0, "for");
+                    strIndex += 3;
+                    continue;
+                }
                 if (IsKeyword(str, strIndex, "return"))
                 {
                     AddToken(TokenKind.Return, 0, "return");
@@ -266,6 +272,7 @@ namespace Honyac
         If,     // if
         Else,   // else
         While,  // while
+        For,    // for
         Return, // return
         Num,    // 整数トークン
     }

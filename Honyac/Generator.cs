@@ -74,6 +74,26 @@ namespace Honyac
                     sb.AppendLine($".L.end.{whileCnt}:");
                     return;
 
+                case NodeKind.For:
+                    int forCnt = Count();
+                    if (node.Initialize != null)
+                    {
+                        Generate(sb, node.Initialize);
+                    }
+                    sb.AppendLine($".L.for.{forCnt}:");
+                    Generate(sb, node.Condition);
+                    sb.AppendLine($"  pop rax");
+                    sb.AppendLine($"  cmp rax, 0");
+                    sb.AppendLine($"  je .L.end.{forCnt}");
+                    Generate(sb, node.Nodes.Item1);
+                    if (node.Loop != null)
+                    {
+                        Generate(sb, node.Loop);
+                    }
+                    sb.AppendLine($"  jmp .L.for.{forCnt}");
+                    sb.AppendLine($".L.end.{forCnt}:");
+                    return;
+
                 case NodeKind.Return:
                     Generate(sb, node.Nodes.Item1);
 

@@ -33,7 +33,10 @@ namespace HonyacTests
             if (node.Kind != NodeKind.Lvar && node.Offset != 0)
                 return false;
 
-            if (node.Kind != NodeKind.If && node.Kind != NodeKind.While && node.Condition != null)
+            if (node.Kind != NodeKind.If && node.Kind != NodeKind.While && node.Kind != NodeKind.For && node.Condition != null)
+                return false;
+
+            if (node.Kind != NodeKind.For && (node.Initialize != null || node.Loop != null))
                 return false;
 
             return true;
@@ -302,6 +305,20 @@ namespace HonyacTests
             sb.AppendLine("a = 0;");
             sb.AppendLine("b = 3;");
             sb.AppendLine("while ( a < b )");
+            sb.AppendLine("  a = a + 1;");
+            sb.AppendLine("return a;");
+            var tokenList = TokenList.Tokenize(sb.ToString());
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+        }
+
+        [TestMethod]
+        public void Test12_for•¶()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("a = 10;");
+            sb.AppendLine("i = 0;");
+            sb.AppendLine("for ( i = 0; i < 3; i = i + 1 )");
             sb.AppendLine("  a = a + 1;");
             sb.AppendLine("return a;");
             var tokenList = TokenList.Tokenize(sb.ToString());

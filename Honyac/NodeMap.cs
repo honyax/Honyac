@@ -21,6 +21,7 @@ namespace Honyac
     ///  stmt       = expr ";"
     ///             | "if" "(" expr ")" stmt ("else" stmt)?
     ///             | "while" "(" expr ")" stmt
+    ///             | "for" "(" expr? ";" expr? ";" expr? ")" stmt
     ///             | "return" expr ";"
     ///  expr       = assign
     ///  assign     = equality ( "=" assign)?
@@ -135,6 +136,33 @@ namespace Honyac
                 TokenList.Expect('(');
                 node.Condition = Expr();
                 TokenList.Expect(')');
+                node.Nodes = Tuple.Create(Stmt(), null as Node);
+            }
+            else if (TokenList.Consume(TokenKind.For))
+            {
+                node = new Node();
+                node.Kind = NodeKind.For;
+                TokenList.Expect('(');
+                if (!TokenList.Consume(';'))
+                {
+                    // 初期化処理ノード
+                    node.Initialize = Expr();
+                    TokenList.Expect(';');
+                }
+
+                if (!TokenList.Consume(';'))
+                {
+                    // 条件式ノード
+                    node.Condition = Expr();
+                    TokenList.Expect(';');
+                }
+
+                if (!TokenList.Consume(')'))
+                {
+                    // ループ処理ノード
+                    node.Loop = Expr();
+                    TokenList.Expect(')');
+                }
                 node.Nodes = Tuple.Create(Stmt(), null as Node);
             }
             else if (TokenList.Consume(TokenKind.Return))
@@ -309,8 +337,17 @@ namespace Honyac
         /// <summary>KindがLvarの場合の変数へのオフセット値</summary>
         public int Offset { get; set; }
 
-        /// <summary>KindがIfの場合の条件ノード</summary>
+        /// <summary>Kindが制御構文（if, while, for）の場合の条件ノード</summary>
         public Node Condition { get; set; }
+
+        /// <summary>Kindがforの場合の初期化ノード</summary>
+        public Node Initialize { get; set; }
+
+        /// <summary>
+        /// Kindがforの場合の繰り返し処理用ノード
+        /// Nodesの中に入れても良かったが、どちらが繰り返しでどちらが中身か分からなくなりそうだったので
+        /// </summary>
+        public Node Loop { get; set; }
 
         public override string ToString()
         {
@@ -334,6 +371,7 @@ namespace Honyac
         Assign, // =
         If,     // if
         While,  // while
+        For,    // for
         Return, // return
         Lvar,   // ローカル変数
         Num,    // 整数
