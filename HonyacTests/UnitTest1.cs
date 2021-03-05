@@ -39,6 +39,9 @@ namespace HonyacTests
             if (node.Kind != NodeKind.For && (node.Initialize != null || node.Loop != null))
                 return false;
 
+            if (node.Kind != NodeKind.Block && node.Bodies != null)
+                return false;
+
             return true;
         }
 
@@ -320,6 +323,23 @@ namespace HonyacTests
             sb.AppendLine("i = 0;");
             sb.AppendLine("for ( i = 0; i < 3; i = i + 1 )");
             sb.AppendLine("  a = a + 1;");
+            sb.AppendLine("return a;");
+            var tokenList = TokenList.Tokenize(sb.ToString());
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+        }
+
+        [TestMethod]
+        public void Test13_block()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("a = 10;");
+            sb.AppendLine("i = 0;");
+            sb.AppendLine("for ( i = 0; i < 3; i = i + 1 )");
+            sb.AppendLine("{");
+            sb.AppendLine("  a = a + 1;");
+            sb.AppendLine("  a = a + 2;");
+            sb.AppendLine("}");
             sb.AppendLine("return a;");
             var tokenList = TokenList.Tokenize(sb.ToString());
             var nodeMap = NodeMap.Create(tokenList);

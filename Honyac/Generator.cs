@@ -103,6 +103,18 @@ namespace Honyac
                     sb.AppendLine($"  ret");
                     return;
 
+                case NodeKind.Block:
+                    // block内の全てのstatementを生成
+                    foreach (var body in node.Bodies)
+                    {
+                        Generate(sb, body);
+
+                        // 式の評価結果としてスタックに一つの値が残っているはずなので、
+                        // スタックが溢れないようにポップしておく
+                        sb.AppendLine($"  pop rax");
+                    }
+                    return;
+
                 default:
                     break;
             }

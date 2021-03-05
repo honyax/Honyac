@@ -19,6 +19,7 @@ namespace Honyac
     /// 上記に従い、EBNF(Extended Backus-Naur form)を実装する
     ///  program    = stmt*
     ///  stmt       = expr ";"
+    ///             | "{" stmt* "}"
     ///             | "if" "(" expr ")" stmt ("else" stmt)?
     ///             | "while" "(" expr ")" stmt
     ///             | "for" "(" expr? ";" expr? ";" expr? ")" stmt
@@ -114,7 +115,19 @@ namespace Honyac
         {
             Node node;
 
-            if (TokenList.Consume(TokenKind.If))
+            if (TokenList.Consume('{'))
+            {
+                node = new Node();
+                node.Kind = NodeKind.Block;
+                node.Bodies = new List<Node>();
+
+                // '}' が来るまでstmtを繰り返す
+                while (!TokenList.Consume('}'))
+                {
+                    node.Bodies.Add(Stmt());
+                }
+            }
+            else if (TokenList.Consume(TokenKind.If))
             {
                 node = new Node();
                 node.Kind = NodeKind.If;
@@ -349,6 +362,11 @@ namespace Honyac
         /// </summary>
         public Node Loop { get; set; }
 
+        /// <summary>
+        /// KindがBlockの場合に、内包するNode. KindがBlock以外の場合はnull
+        /// </summary>
+        public List<Node> Bodies { get; set; }
+
         public override string ToString()
         {
             return $"Kind:{Kind} Value:{Value} Offset:{Offset}";
@@ -373,6 +391,7 @@ namespace Honyac
         While,  // while
         For,    // for
         Return, // return
+        Block,  // { ... }
         Lvar,   // ローカル変数
         Num,    // 整数
     }
