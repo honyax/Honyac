@@ -115,6 +115,12 @@ namespace Honyac
                     }
                     return;
 
+                case NodeKind.FuncCall:
+                    sb.AppendLine($"  mov rax, 0");
+                    sb.AppendLine($"  call {node.FuncName}");
+                    sb.AppendLine($"  push rax");
+                    return;
+
                 default:
                     break;
             }

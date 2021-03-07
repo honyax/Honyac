@@ -345,5 +345,15 @@ namespace HonyacTests
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
         }
+
+        [TestMethod]
+        public void Test14_ŠÖ”ŒÄ‚Ño‚µ()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("return sub();");
+            var tokenList = TokenList.Tokenize(sb.ToString());
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+        }
     }
 }

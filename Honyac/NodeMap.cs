@@ -31,7 +31,9 @@ namespace Honyac
     ///  add        = mul ("+" mul | "-" mul)*
     ///  mul        = unary ("*" unary | "/" unary)*
     ///  unary      = ("+" | "-")? primary
-    ///  primary    = num | ident | "(" expr ")"
+    ///  primary    = num
+    ///             | ident ( "(" ")" )?
+    ///             | "(" expr ")"
     ///  
     /// </summary>
     public class NodeMap
@@ -62,9 +64,15 @@ namespace Honyac
 
         private void CreateLVars()
         {
-            foreach (var token in TokenList)
+            for (var i = 0; i < TokenList.Count; i++)
             {
+                var token = TokenList[i];
                 if (token.Kind != TokenKind.Ident)
+                    continue;
+
+                // 次のトークンが「(」の場合は関数呼び出しなのでスキップ
+                var nextToken = (i + 1) < TokenList.Count ? TokenList[i + 1] : null;
+                if (nextToken != null && "(".Equals(nextToken.Str))
                     continue;
 
                 if (LVars.Exists((lvar) => lvar.Name == token.Str))
@@ -325,8 +333,20 @@ namespace Honyac
             var identToken = TokenList.ConsumeIdent();
             if (identToken != null)
             {
-                var offset = LVars.FirstOrDefault(lvar => lvar.Name == identToken.Str).Offset;
-                return NewNodeIdent(offset);
+                // identTokenの次に「(」が来る場合は関数コール
+                if (TokenList.Consume('('))
+                {
+                    var node = new Node();
+                    node.Kind = NodeKind.FuncCall;
+                    node.FuncName = identToken.Str;
+                    TokenList.Expect(')');
+                    return node;
+                }
+                else
+                {
+                    var offset = LVars.FirstOrDefault(lvar => lvar.Name == identToken.Str).Offset;
+                    return NewNodeIdent(offset);
+                }
             }
             else
             {
@@ -367,6 +387,11 @@ namespace Honyac
         /// </summary>
         public List<Node> Bodies { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string FuncName { get; set; }
+
         public override string ToString()
         {
             return $"Kind:{Kind} Value:{Value} Offset:{Offset}";
@@ -378,22 +403,23 @@ namespace Honyac
     /// </summary>
     public enum NodeKind
     {
-        Add,    // +
-        Sub,    // -
-        Mul,    // *
-        Div,    // /
-        Eq,     // ==
-        Ne,     // !=
-        Lt,     // <
-        Le,     // <=
-        Assign, // =
-        If,     // if
-        While,  // while
-        For,    // for
-        Return, // return
-        Block,  // { ... }
-        Lvar,   // ローカル変数
-        Num,    // 整数
+        Add,        // +
+        Sub,        // -
+        Mul,        // *
+        Div,        // /
+        Eq,         // ==
+        Ne,         // !=
+        Lt,         // <
+        Le,         // <=
+        Assign,     // =
+        If,         // if
+        While,      // while
+        For,        // for
+        Return,     // return
+        Block,      // { ... }
+        FuncCall,   // 関数コール
+        Lvar,       // ローカル変数
+        Num,        // 整数
     }
 
     /// <summary>
