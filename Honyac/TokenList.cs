@@ -243,6 +243,17 @@ namespace Honyac
             throw new ArgumentException($"Token is Not Number CurrentIndex:{CurrentIndex}");
         }
 
+        public Token ExpectIdent()
+        {
+            var token = ConsumeIdent();
+            if (token != null)
+            {
+                return token;
+            }
+
+            throw new ArgumentException($"Token is Not Ident CurrentIndex:{CurrentIndex}");
+        }
+
         /// <summary>
         /// トークンが終わりに到達しているか
         /// </summary>

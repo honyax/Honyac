@@ -42,6 +42,9 @@ namespace HonyacTests
             if (node.Kind != NodeKind.Block && node.Bodies != null)
                 return false;
 
+            if (node.Kind != NodeKind.FuncCall && node.FuncName != null)
+                return false;
+
             return true;
         }
 

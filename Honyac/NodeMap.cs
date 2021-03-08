@@ -58,32 +58,32 @@ namespace Honyac
 
         private void Analyze()
         {
-            CreateLVars();
+            CreateLVars(TokenList, LVars);
             Program();
         }
 
-        private void CreateLVars()
+        private void CreateLVars(TokenList tokenList, List<LVar> lVars)
         {
-            for (var i = 0; i < TokenList.Count; i++)
+            for (var i = 0; i < tokenList.Count; i++)
             {
-                var token = TokenList[i];
+                var token = tokenList[i];
                 if (token.Kind != TokenKind.Ident)
                     continue;
 
                 // 次のトークンが「(」の場合は関数呼び出しなのでスキップ
-                var nextToken = (i + 1) < TokenList.Count ? TokenList[i + 1] : null;
+                var nextToken = (i + 1) < tokenList.Count ? tokenList[i + 1] : null;
                 if (nextToken != null && "(".Equals(nextToken.Str))
                     continue;
 
-                if (LVars.Exists((lvar) => lvar.Name == token.Str))
+                if (lVars.Exists((lvar) => lvar.Name == token.Str))
                     continue;
 
                 var lvar = new LVar
                 {
                     Name = token.Str,
-                    Offset = (LVars.Count + 1) * 8,
+                    Offset = (lVars.Count + 1) * 8,
                 };
-                LVars.Add(lvar);
+                lVars.Add(lvar);
             }
         }
 
