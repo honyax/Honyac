@@ -5,7 +5,7 @@ namespace Honyac
 {
     public class TokenList : List<Token>
     {
-        private int CurrentIndex { get; set; }
+        public int CurrentIndex { get; private set; }
         private Token Current { get { return CurrentIndex < Count ? this[CurrentIndex] : null; } }
 
         private TokenList() { }

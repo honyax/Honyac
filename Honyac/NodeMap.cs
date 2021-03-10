@@ -17,7 +17,8 @@ namespace Honyac
     ///  6. ( )
     /// 
     /// 上記に従い、EBNF(Extended Backus-Naur form)を実装する
-    ///  program    = stmt*
+    ///  program    = function*
+    ///  function   = ident "(" ")" stmt
     ///  stmt       = expr ";"
     ///             | "{" stmt* "}"
     ///             | "if" "(" expr ")" stmt ("else" stmt)?
@@ -44,7 +45,7 @@ namespace Honyac
 
         public List<Node> Nodes { get; set; } = new List<Node>();
 
-        public List<LVar> LVars { get; set; } = new List<LVar>();
+        public List<LVar> LVars { get; set; }
 
         private NodeMap() { }
 
@@ -58,11 +59,10 @@ namespace Honyac
 
         private void Analyze()
         {
-            CreateLVars(TokenList, LVars);
             Program();
         }
 
-        private void CreateLVars(TokenList tokenList, List<LVar> lVars)
+        private void CreateLVars(List<Token> tokenList, List<LVar> lVars)
         {
             for (var i = 0; i < tokenList.Count; i++)
             {
@@ -115,8 +115,46 @@ namespace Honyac
         {
             while (!TokenList.IsEof())
             {
-                Nodes.Add(Stmt());
+                Nodes.Add(Function());
             }
+        }
+
+        private Node Function()
+        {
+            var identToken = TokenList.ExpectIdent();
+            TokenList.Expect('(');
+            TokenList.Expect(')');
+
+            // TODO: 変数はblock単位で持ちたいが、一旦関数単位で持つようにしてみる
+            // 関数内のローカル変数のリストを作成するため、この関数内のトークンだけを抜き出す
+            var tokens = new List<Token>();
+            var lVars = new List<LVar>();
+            var bracketNum = 0;
+            for (var i = TokenList.CurrentIndex; i < TokenList.Count; i++)
+            {
+                if ("{".Equals(TokenList[i].Str))
+                    bracketNum++;
+                else if ("}".Equals(TokenList[i].Str))
+                    bracketNum--;
+
+                tokens.Add(TokenList[i]);
+                if (bracketNum == 0)
+                    break;
+            }
+            CreateLVars(tokens, lVars);
+
+            // TODO: 何とかしたい
+            // 配下のNodeから参照できるよう、関数内部でコピーする
+            this.LVars = lVars;
+
+            // この以降にblockが続くが、blockはstmtで実現できているのでNodesのItem1にblockとなるstmtを設定する
+            var node = new Node();
+            node.Kind = NodeKind.Function;
+            node.FuncName = identToken.Str;
+            node.Nodes = Tuple.Create(Stmt(), null as Node);
+            node.LVars = lVars;
+
+            return node;
         }
 
         private Node Stmt()
@@ -388,9 +426,16 @@ namespace Honyac
         public List<Node> Bodies { get; set; }
 
         /// <summary>
-        /// 
+        /// 関数名。
+        /// KindがFuncCall, Functionの場合に有効
         /// </summary>
         public string FuncName { get; set; }
+
+        /// <summary>
+        /// 変数リスト。
+        /// KindがFunctionの場合のみ有効。その他の場合はnull
+        /// </summary>
+        public List<LVar> LVars { get; set; }
 
         public override string ToString()
         {
@@ -418,6 +463,7 @@ namespace Honyac
         Return,     // return
         Block,      // { ... }
         FuncCall,   // 関数コール
+        Function,   // 関数
         Lvar,       // ローカル変数
         Num,        // 整数
     }

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Honyac
@@ -119,6 +119,31 @@ namespace Honyac
                     sb.AppendLine($"  mov rax, 0");
                     sb.AppendLine($"  call {node.FuncName}");
                     sb.AppendLine($"  push rax");
+                    return;
+
+                case NodeKind.Function:
+                    // 関数の宣言
+                    sb.AppendLine($".globl {node.FuncName}");
+                    sb.AppendLine($"{node.FuncName}:");
+
+                    // 関数プロローグ
+                    sb.AppendLine($"  push rbp");
+                    sb.AppendLine($"  mov rbp, rsp");
+
+                    // 変数がある場合は変数の領域を確保
+                    if (node.LVars != null && node.LVars.Any())
+                    {
+                        var maxOffset = node.LVars.Max(LVar => LVar.Offset);
+                        sb.AppendLine($"  sub rsp, {maxOffset}");
+                    }
+
+                    Generate(sb, node.Nodes.Item1);
+
+                    // エピローグ
+                    // 最後の式の結果がRAXに残っているのでそれが返り値になる
+                    sb.AppendLine($"  mov rsp, rbp");
+                    sb.AppendLine($"  pop rbp");
+                    sb.AppendLine($"  ret");
                     return;
 
                 default:
