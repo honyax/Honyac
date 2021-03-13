@@ -53,11 +53,20 @@ namespace HonyacTests
 
         bool ValidateNodeValuesAndOffsets(NodeMap nodeMap)
         {
+            var generator = new Generator();
+            var sb = new StringBuilder();
+
             foreach (var node in nodeMap.Nodes)
             {
                 if (!ValidateNode(node))
                     return false;
+
+                if (node.Kind != NodeKind.Function)
+                    return false;
+
+                generator.Generate(sb, node);
             }
+
             return true;
         }
 
@@ -389,6 +398,37 @@ namespace HonyacTests
             sb.AppendLine("return sub();");
             sb.AppendLine("}");
             var tokenList = TokenList.Tokenize(sb.ToString());
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+        }
+
+        [TestMethod]
+        public void Test15_アドレスとポインタ()
+        {
+            var str = @"
+main() {
+    a = 10;
+    b = &a;
+    return *b;
+}
+";
+            var tokenList = TokenList.Tokenize(str);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+        }
+
+        [TestMethod]
+        public void Test16_アドレスとポインタその２()
+        {
+            var str = @"
+main() {
+    a = 3;
+    b = 5;
+    c = &b + 8;
+    return *c;
+}
+";
+            var tokenList = TokenList.Tokenize(str);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
         }

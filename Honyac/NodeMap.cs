@@ -32,6 +32,8 @@ namespace Honyac
     ///  add        = mul ("+" mul | "-" mul)*
     ///  mul        = unary ("*" unary | "/" unary)*
     ///  unary      = ("+" | "-")? primary
+    ///             | "&" unary
+    ///             | "*" unary
     ///  primary    = num
     ///             | ident ( "(" ")" )?
     ///             | "(" expr ")"
@@ -352,6 +354,14 @@ namespace Honyac
             {
                 return NewNode(NodeKind.Sub, NewNodeNum(0), Primary());
             }
+            else if (TokenList.Consume('&'))
+            {
+                return NewNode(NodeKind.Addr, Unary(), null);
+            }
+            else if (TokenList.Consume('*'))
+            {
+                return NewNode(NodeKind.DeRef, Unary(), null);
+            }
             else
             {
                 return Primary();
@@ -465,6 +475,8 @@ namespace Honyac
         FuncCall,   // 関数コール
         Function,   // 関数
         Lvar,       // ローカル変数
+        Addr,       // アドレス &
+        DeRef,      // ポインタ *
         Num,        // 整数
     }
 

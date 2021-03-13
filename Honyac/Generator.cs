@@ -11,14 +11,17 @@ namespace Honyac
 
         private void GenerateLval(StringBuilder sb, Node node)
         {
-            if (node.Kind != NodeKind.Lvar)
+            switch (node.Kind)
             {
-                throw new ArgumentException($"Node is not Left Variable:{node}");
-            }
+                case NodeKind.Lvar:
+                    sb.AppendLine($"  mov rax, rbp");
+                    sb.AppendLine($"  sub rax, {node.Offset}");
+                    sb.AppendLine($"  push rax");
+                    break;
 
-            sb.AppendLine($"  mov rax, rbp");
-            sb.AppendLine($"  sub rax, {node.Offset}");
-            sb.AppendLine($"  push rax");
+                default:
+                    throw new ArgumentException($"Invalid NodeKind:{node}");
+            }
         }
 
         public void Generate(StringBuilder sb, Node node)
@@ -144,6 +147,17 @@ namespace Honyac
                     sb.AppendLine($"  mov rsp, rbp");
                     sb.AppendLine($"  pop rbp");
                     sb.AppendLine($"  ret");
+                    return;
+
+                case NodeKind.Addr:
+                    GenerateLval(sb, node.Nodes.Item1);
+                    return;
+
+                case NodeKind.DeRef:
+                    Generate(sb, node.Nodes.Item1);
+                    sb.AppendLine($"  pop rax");
+                    sb.AppendLine($"  mov rax, [rax]");
+                    sb.AppendLine($"  push rax");
                     return;
 
                 default:
