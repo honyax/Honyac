@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Diagnostics;
 using Honyac;
 
 namespace HonyacTests
@@ -70,10 +71,40 @@ namespace HonyacTests
             return true;
         }
 
+        /// <summary>
+        /// 渡されたソースコードをコンパイル、実行してExitCodeを取得する
+        /// </summary>
+        private int CopmlileAndExecOnWsl(string src)
+        {
+            var dir = @"D:\var\Honyac\Honyac\bin\netcoreapp3.1\";
+            var ldir = @"/mnt/d/var/Honyac/Honyac/bin/netcoreapp3.1/";
+
+            // Honyac.exe "main() { return 10; }" > tmp.S; cc -o tmp tmp.S; ./tmp; echo $?
+            var prog = new Program(src);
+            var asmCode = prog.Execute();
+            File.WriteAllText(dir + "tmp.S", asmCode);
+
+            var cc = new ProcessStartInfo();
+            cc.FileName = "ubuntu1804";
+            cc.Arguments = @$"run ""cc -o {ldir}tmp {ldir}tmp.S {ldir}tmp.o""";
+            var ccProc = Process.Start(cc);
+            ccProc.WaitForExit();
+            Assert.IsTrue(ccProc.HasExited);
+
+            var tmp = new ProcessStartInfo();
+            tmp.FileName = "ubuntu1804";
+            tmp.Arguments = $@"run ""{ldir}tmp""";
+            var tmpProc = Process.Start(tmp);
+            tmpProc.WaitForExit();
+            Assert.IsTrue(tmpProc.HasExited);
+
+            return tmpProc.ExitCode;
+        }
+
         [TestMethod]
         public void Test01_単一の数字をコンパイル()
         {
-            var inTest = "main() { 100; }";
+            var src = "main() { 100; }";
             var outTest = new StringBuilder()
                 .AppendLine(".intel_syntax noprefix")
                 .AppendLine("  mov rax, 0")
@@ -95,16 +126,18 @@ namespace HonyacTests
             {
                 Console.SetOut(output);
 
-                Program.Main(new string[] { inTest });
+                Program.Main(new string[] { src });
 
                 Assert.AreEqual(output.ToString(), outTest.ToString());
             }
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 100);
         }
 
         [TestMethod]
         public void Test02_四則演算をコンパイル()
         {
-            var inTest = "main() { 80 - 95 + 50 - 20; }";
+            var src = "main() { 80 - 95 + 50 - 20; }";
             var outTest = new StringBuilder()
                 .AppendLine(".intel_syntax noprefix")
                 .AppendLine("  mov rax, 0")
@@ -141,16 +174,19 @@ namespace HonyacTests
             {
                 Console.SetOut(output);
 
-                Program.Main(new string[] { inTest });
+                Program.Main(new string[] { src });
 
                 Assert.AreEqual(output.ToString(), outTest.ToString());
             }
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 15);
         }
 
         [TestMethod]
         public void Test03_トークン解析()
         {
-            var tokenList = TokenList.Tokenize("main() { 10 + 50 - 60; }");
+            var src = "main() { 10 + 50 - 60; }";
+            var tokenList = TokenList.Tokenize(src);
             Assert.AreEqual(tokenList.Count, 11);
             Assert.AreEqual(tokenList.ExpectIdent().Str, "main");
             Assert.IsTrue(tokenList.Consume('('));
@@ -164,12 +200,15 @@ namespace HonyacTests
             Assert.IsTrue(tokenList.Consume(';'));
             Assert.IsTrue(tokenList.Consume('}'));
             Assert.IsTrue(tokenList.IsEof());
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 0);
         }
 
         [TestMethod]
         public void Test04_NodeMap解析()
         {
-            var tokenList = TokenList.Tokenize("main() { 100 - ( 78 + 25 ) * 10 - 20 / 5; }");
+            var src = "main() { 100 - ( 7 + 2 ) * 10 - 20 / 5; }";
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var head = nodeMap.Head.Nodes.Item1.Bodies[0];
@@ -180,16 +219,19 @@ namespace HonyacTests
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Kind, NodeKind.Mul);
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Kind, NodeKind.Add);
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item2.Value, 10);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item1.Value, 78);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item2.Value, 25);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item1.Value, 7);
+            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item2.Value, 2);
             Assert.AreEqual(head.Nodes.Item2.Nodes.Item1.Value, 20);
             Assert.AreEqual(head.Nodes.Item2.Nodes.Item2.Value, 5);
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 6);
         }
 
         [TestMethod]
         public void Test05_Unary()
         {
-            var tokenList = TokenList.Tokenize("main() { -10 + 20; }");
+            var src = "main() { -10 + 20; }";
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var head = nodeMap.Head.Nodes.Item1.Bodies[0];
@@ -199,6 +241,8 @@ namespace HonyacTests
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Kind, NodeKind.Num);
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Value, 0);
             Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Value, 10);
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 10);
         }
 
         [TestMethod]
@@ -240,14 +284,14 @@ namespace HonyacTests
         [TestMethod]
         public void Test07_1文字変数()
         {
-            var str = @"
+            var src = @"
 main() {
     a = 10;
     z = 50;
     a = z + a;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
@@ -263,20 +307,21 @@ main() {
             Assert.AreEqual(n2.Nodes.Item2.Kind, NodeKind.Add);
             Assert.AreEqual(n2.Nodes.Item2.Nodes.Item1.Offset, 16);
             Assert.AreEqual(n2.Nodes.Item2.Nodes.Item2.Offset, 8);
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 60);
         }
 
         [TestMethod]
         public void Test08_複数文字のローカル変数()
         {
-            var sb = new StringBuilder();
-            var str = @"
+            var src = @"
 main() {
     foo = 1;
     bar = 2 + 3;
     foo + bar;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
@@ -293,18 +338,20 @@ main() {
             Assert.AreEqual(n2.Kind, NodeKind.Add);
             Assert.AreEqual(n2.Nodes.Item1.Offset, 8);
             Assert.AreEqual(n2.Nodes.Item2.Offset, 16);
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 6);
         }
 
         [TestMethod]
         public void Test09_return文()
         {
-            var str = @"
+            var src = @"
 main() {
     abc = 15;
     return abc;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
@@ -317,12 +364,14 @@ main() {
             Assert.AreEqual(n1.Kind, NodeKind.Return);
             Assert.AreEqual(n1.Nodes.Item1.Offset, 8);
             Assert.IsNull(n1.Nodes.Item2);
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 15);
         }
 
         [TestMethod]
         public void Test10_if文()
         {
-            var str = @"
+            var src = @"
 main() {
     if ( 1 )
         return 2;
@@ -330,7 +379,7 @@ main() {
         return 3;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
@@ -342,12 +391,14 @@ main() {
             Assert.AreEqual(n0.Nodes.Item1.Nodes.Item1.Value, 2);
             Assert.AreEqual(n0.Nodes.Item2.Kind, NodeKind.Return);
             Assert.AreEqual(n0.Nodes.Item2.Nodes.Item1.Value, 3);
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 2);
         }
 
         [TestMethod]
         public void Test11_while文()
         {
-            var str = @"
+            var src = @"
 main() {
     a = 0;
     b = 3;
@@ -356,15 +407,17 @@ main() {
     return a;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 3);
         }
 
         [TestMethod]
         public void Test12_for文()
         {
-            var str = @"
+            var src = @"
 main() {
     a = 10;
     i = 0;
@@ -373,15 +426,17 @@ main() {
     return a;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 13);
         }
 
         [TestMethod]
         public void Test13_block()
         {
-            var str = @"
+            var src = @"
 main() {
     a = 10;
     i = 0;
@@ -392,43 +447,49 @@ main() {
     return a;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 19);
         }
 
         [TestMethod]
         public void Test14_関数呼び出し()
         {
-            var str = @"
+            var src = @"
 main() {
     return sub();
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 10);
         }
 
         [TestMethod]
         public void Test15_アドレスとポインタ()
         {
-            var str = @"
+            var src = @"
 main() {
     a = 10;
     b = &a;
     return *b;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 10);
         }
 
         [TestMethod]
         public void Test16_アドレスとポインタその２()
         {
-            var str = @"
+            var src = @"
 main() {
     a = 3;
     b = 5;
@@ -436,9 +497,11 @@ main() {
     return *c;
 }
 ";
-            var tokenList = TokenList.Tokenize(str);
+            var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 3);
         }
     }
 }
