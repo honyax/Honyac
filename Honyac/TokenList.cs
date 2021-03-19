@@ -23,6 +23,7 @@ namespace Honyac
         private void TokenizeInternal(string str)
         {
             this.CurrentIndex = 0;
+            int length;
             for (var strIndex = 0;  strIndex < str.Length; )
             {
                 if (char.IsWhiteSpace(str[strIndex]))
@@ -58,34 +59,34 @@ namespace Honyac
                         continue;
                     }
                 }
-                if (IsKeyword(str, strIndex, "if"))
+                if (IsKeyword(str, strIndex, "if", out length))
                 {
                     AddToken(TokenKind.If, 0, "if");
-                    strIndex += 2;
+                    strIndex += length;
                     continue;
                 }
-                if (IsKeyword(str, strIndex, "else"))
+                if (IsKeyword(str, strIndex, "else", out length))
                 {
                     AddToken(TokenKind.Else, 0, "else");
-                    strIndex += 4;
+                    strIndex += length;
                     continue;
                 }
-                if (IsKeyword(str, strIndex, "while"))
+                if (IsKeyword(str, strIndex, "while", out length))
                 {
                     AddToken(TokenKind.While, 0, "while");
-                    strIndex += 5;
+                    strIndex += length;
                     continue;
                 }
-                if (IsKeyword(str, strIndex, "for"))
+                if (IsKeyword(str, strIndex, "for", out length))
                 {
                     AddToken(TokenKind.For, 0, "for");
-                    strIndex += 3;
+                    strIndex += length;
                     continue;
                 }
-                if (IsKeyword(str, strIndex, "return"))
+                if (IsKeyword(str, strIndex, "return", out length))
                 {
                     AddToken(TokenKind.Return, 0, "return");
-                    strIndex += 6;
+                    strIndex += length;
                     continue;
                 }
                 if (char.IsDigit(str[strIndex]))
@@ -114,14 +115,16 @@ namespace Honyac
             }
         }
 
-        private bool IsKeyword(string str, int strIndex, string keyword)
+        private bool IsKeyword(string str, int strIndex, string keyword, out int length)
         {
             var len = keyword.Length;
             if (strIndex + len < str.Length && keyword.Equals(str.Substring(strIndex, len)) && !IsIdent(str[strIndex + len]))
             {
+                length = len;
                 return true;
             }
 
+            length = 0;
             return false;
         }
 
