@@ -104,7 +104,7 @@ namespace HonyacTests
         [TestMethod]
         public void Test01_単一の数字をコンパイル()
         {
-            var src = "main() { 100; }";
+            var src = "int main() { 100; }";
             var outTest = new StringBuilder()
                 .AppendLine(".intel_syntax noprefix")
                 .AppendLine("  mov rax, 0")
@@ -137,7 +137,7 @@ namespace HonyacTests
         [TestMethod]
         public void Test02_四則演算をコンパイル()
         {
-            var src = "main() { 80 - 95 + 50 - 20; }";
+            var src = "int main() { 80 - 95 + 50 - 20; }";
             var outTest = new StringBuilder()
                 .AppendLine(".intel_syntax noprefix")
                 .AppendLine("  mov rax, 0")
@@ -185,9 +185,10 @@ namespace HonyacTests
         [TestMethod]
         public void Test03_トークン解析()
         {
-            var src = "main() { 10 + 50 - 60; }";
+            var src = "int main() { 10 + 50 - 60; }";
             var tokenList = TokenList.Tokenize(src);
-            Assert.AreEqual(tokenList.Count, 11);
+            Assert.AreEqual(tokenList.Count, 12);
+            Assert.IsNotNull(tokenList.Expect(TokenKind.Type));
             Assert.AreEqual(tokenList.ExpectIdent().Str, "main");
             Assert.IsTrue(tokenList.Consume('('));
             Assert.IsTrue(tokenList.Consume(')'));
@@ -207,7 +208,7 @@ namespace HonyacTests
         [TestMethod]
         public void Test04_NodeMap解析()
         {
-            var src = "main() { 100 - ( 7 + 2 ) * 10 - 20 / 5; }";
+            var src = "int main() { 100 - ( 7 + 2 ) * 10 - 20 / 5; }";
             var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
@@ -230,7 +231,7 @@ namespace HonyacTests
         [TestMethod]
         public void Test05_Unary()
         {
-            var src = "main() { -10 + 20; }";
+            var src = "int main() { -10 + 20; }";
             var tokenList = TokenList.Tokenize(src);
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
@@ -256,7 +257,7 @@ namespace HonyacTests
             };
             foreach (var tuple in comparators)
             {
-                var tokenList = TokenList.Tokenize("main() { 10 " + tuple.Item2 + " 20; }");
+                var tokenList = TokenList.Tokenize("int main() { 10 " + tuple.Item2 + " 20; }");
                 var nodeMap = NodeMap.Create(tokenList);
                 Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
                 var head = nodeMap.Head.Nodes.Item1.Bodies[0];
@@ -271,7 +272,7 @@ namespace HonyacTests
             };
             foreach (var tuple in inverseComparators)
             {
-                var tokenList = TokenList.Tokenize("main() { 10 " + tuple.Item2 + " 20; }");
+                var tokenList = TokenList.Tokenize("int main() { 10 " + tuple.Item2 + " 20; }");
                 var nodeMap = NodeMap.Create(tokenList);
                 Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
                 var head = nodeMap.Head.Nodes.Item1.Bodies[0];
@@ -285,7 +286,7 @@ namespace HonyacTests
         public void Test07_1文字変数()
         {
             var src = @"
-main() {
+int main() {
     int a;
     int z;
     a = 10;
@@ -317,7 +318,7 @@ main() {
         public void Test08_複数文字のローカル変数()
         {
             var src = @"
-main() {
+int main() {
     int foo;
     int bar;
     foo = 1;
@@ -350,7 +351,7 @@ main() {
         public void Test09_return文()
         {
             var src = @"
-main() {
+int main() {
     int abc;
     abc = 15;
     return abc;
@@ -377,7 +378,7 @@ main() {
         public void Test10_if文()
         {
             var src = @"
-main() {
+int main() {
     if ( 1 )
         return 2;
     else
@@ -404,7 +405,7 @@ main() {
         public void Test11_while文()
         {
             var src = @"
-main() {
+int main() {
     int a;
     int b;
     a = 0;
@@ -425,7 +426,7 @@ main() {
         public void Test12_for文()
         {
             var src = @"
-main() {
+int main() {
     int a;
     int i;
     a = 10;
@@ -446,7 +447,7 @@ main() {
         public void Test13_block()
         {
             var src = @"
-main() {
+int main() {
     int a;
     int i;
     a = 10;
@@ -469,7 +470,7 @@ main() {
         public void Test14_関数呼び出し()
         {
             var src = @"
-main() {
+int main() {
     return sub();
 }
 ";
@@ -484,7 +485,7 @@ main() {
         public void Test15_アドレスとポインタ()
         {
             var src = @"
-main() {
+int main() {
     int a;
     int b;
     a = 10;
@@ -503,7 +504,7 @@ main() {
         public void Test16_アドレスとポインタその２()
         {
             var src = @"
-main() {
+int main() {
     int a;
     int b;
     int c;

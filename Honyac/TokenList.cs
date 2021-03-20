@@ -248,6 +248,18 @@ namespace Honyac
             throw new ArgumentException($"Token Not Match Expect:{op} CurrentIndex:{CurrentIndex}");
         }
 
+        public Token Expect(TokenKind kind)
+        {
+            var token = Current;
+            if (token != null && token.Kind == kind)
+            {
+                CurrentIndex++;
+                return token;
+            }
+
+            throw new ArgumentException($"Token Not Match Expect:{kind} Current:{token?.Kind}");
+        }
+
         /// <summary>
         /// 次のトークンが数値の場合、トークンを1つ読み進めてその数値を返す。
         /// それ以外の場合はエラーを報告する。

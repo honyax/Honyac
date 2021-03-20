@@ -18,7 +18,7 @@ namespace Honyac
     /// 
     /// 上記に従い、EBNF(Extended Backus-Naur form)を実装する
     ///  program    = function*
-    ///  function   = ident "(" ")" stmt
+    ///  function   = type ident "(" ")" stmt
     ///  stmt       = expr ";"
     ///             | "{" stmt* "}"
     ///             | "if" "(" expr ")" stmt ("else" stmt)?
@@ -128,6 +128,9 @@ namespace Honyac
 
         private Node Function()
         {
+            // 関数の戻り地の型宣言。ひとまず無視
+            TokenList.Expect(TokenKind.Type);
+
             var identToken = TokenList.ExpectIdent();
             TokenList.Expect('(');
             TokenList.Expect(')');
