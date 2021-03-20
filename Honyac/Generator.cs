@@ -160,6 +160,12 @@ namespace Honyac
                     sb.AppendLine($"  push rax");
                     return;
 
+                case NodeKind.Type:
+                    // 型宣言ノードはひとまず無視する。
+                    // 呼び出すごとにpopされるので、ダミーのpushを入れる
+                    sb.AppendLine($"  push 0");
+                    return;
+
                 default:
                     break;
             }

@@ -25,6 +25,7 @@ namespace Honyac
     ///             | "while" "(" expr ")" stmt
     ///             | "for" "(" expr? ";" expr? ";" expr? ")" stmt
     ///             | "return" expr ";"
+    ///             | type ident ";"
     ///  expr       = assign
     ///  assign     = equality ( "=" assign)?
     ///  equality   = relational ("==" relational | "!=" relational)*
@@ -69,20 +70,24 @@ namespace Honyac
             for (var i = 0; i < tokenList.Count; i++)
             {
                 var token = tokenList[i];
-                if (token.Kind != TokenKind.Ident)
+                if (token.Kind != TokenKind.Type)
                     continue;
 
-                // 次のトークンが「(」の場合は関数呼び出しなのでスキップ
-                var nextToken = (i + 1) < tokenList.Count ? tokenList[i + 1] : null;
+                // 次のトークンはidentのはず
+                var identToken = tokenList[i + 1];
+
+                // さらに次のトークンが「(」の場合は関数宣言なのでスキップ
+                var nextToken = (i + 2) < tokenList.Count ? tokenList[i + 2] : null;
                 if (nextToken != null && "(".Equals(nextToken.Str))
                     continue;
 
-                if (lVars.Exists((lvar) => lvar.Name == token.Str))
-                    continue;
+                // 同じ変数名があった場合はException
+                if (lVars.Exists((lvar) => lvar.Name == identToken.Str))
+                    throw new ArgumentException($"Duplicate Identifier:{identToken.Str}");
 
                 var lvar = new LVar
                 {
-                    Name = token.Str,
+                    Name = identToken.Str,
                     Offset = (lVars.Count + 1) * 8,
                 };
                 lVars.Add(lvar);
@@ -232,6 +237,14 @@ namespace Honyac
                 node.Kind = NodeKind.Return;
                 node.Nodes = Tuple.Create(Expr(), null as Node);
                 TokenList.Expect(';');
+            }
+            else if (TokenList.Consume(TokenKind.Type))
+            {
+                // 型宣言の場合は、ひとまず型宣言ノードを作成するのみ。
+                var identToken = TokenList.ExpectIdent();
+                TokenList.Expect(';');
+                node = new Node();
+                node.Kind = NodeKind.Type;
             }
             else
             {
@@ -392,7 +405,11 @@ namespace Honyac
                 }
                 else
                 {
-                    var offset = LVars.FirstOrDefault(lvar => lvar.Name == identToken.Str).Offset;
+                    var lVar = LVars.FirstOrDefault(lv => lv.Name == identToken.Str);
+                    if (lVar == null)
+                        throw new ArgumentException($"Unknown Identifier:{identToken.Str}");
+
+                    var offset = lVar.Offset;
                     return NewNodeIdent(offset);
                 }
             }
@@ -477,6 +494,7 @@ namespace Honyac
         Lvar,       // ローカル変数
         Addr,       // アドレス &
         DeRef,      // ポインタ *
+        Type,       // 型
         Num,        // 整数
     }
 

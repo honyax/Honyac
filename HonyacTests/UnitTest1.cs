@@ -286,6 +286,8 @@ namespace HonyacTests
         {
             var src = @"
 main() {
+    int a;
+    int z;
     a = 10;
     z = 50;
     a = z + a;
@@ -295,10 +297,10 @@ main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
-            Assert.AreEqual(block.Bodies.Count, 3);
-            var n0 = block.Bodies[0];
-            var n1 = block.Bodies[1];
-            var n2 = block.Bodies[2];
+            Assert.AreEqual(block.Bodies.Count, 5);
+            var n0 = block.Bodies[2];
+            var n1 = block.Bodies[3];
+            var n2 = block.Bodies[4];
             Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
             Assert.AreEqual(n0.Nodes.Item2.Value, 10);
             Assert.AreEqual(n1.Nodes.Item1.Offset, 16);
@@ -316,6 +318,8 @@ main() {
         {
             var src = @"
 main() {
+    int foo;
+    int bar;
     foo = 1;
     bar = 2 + 3;
     foo + bar;
@@ -325,10 +329,10 @@ main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
-            Assert.AreEqual(block.Bodies.Count, 3);
-            var n0 = block.Bodies[0];
-            var n1 = block.Bodies[1];
-            var n2 = block.Bodies[2];
+            Assert.AreEqual(block.Bodies.Count, 5);
+            var n0 = block.Bodies[2];
+            var n1 = block.Bodies[3];
+            var n2 = block.Bodies[4];
             Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
             Assert.AreEqual(n0.Nodes.Item2.Value, 1);
             Assert.AreEqual(n1.Nodes.Item1.Offset, 16);
@@ -347,6 +351,7 @@ main() {
         {
             var src = @"
 main() {
+    int abc;
     abc = 15;
     return abc;
 }
@@ -355,9 +360,9 @@ main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
-            Assert.AreEqual(block.Bodies.Count, 2);
-            var n0 = block.Bodies[0];
-            var n1 = block.Bodies[1];
+            Assert.AreEqual(block.Bodies.Count, 3);
+            var n0 = block.Bodies[1];
+            var n1 = block.Bodies[2];
             Assert.AreEqual(n0.Kind, NodeKind.Assign);
             Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
             Assert.AreEqual(n0.Nodes.Item2.Value, 15);
@@ -400,6 +405,8 @@ main() {
         {
             var src = @"
 main() {
+    int a;
+    int b;
     a = 0;
     b = 3;
     while ( a < b )
@@ -419,6 +426,8 @@ main() {
         {
             var src = @"
 main() {
+    int a;
+    int i;
     a = 10;
     i = 0;
     for ( i = 0; i < 3; i = i + 1 )
@@ -438,6 +447,8 @@ main() {
         {
             var src = @"
 main() {
+    int a;
+    int i;
     a = 10;
     i = 0;
     for ( i = 0; i < 3; i = i + 1 ) {
@@ -474,6 +485,8 @@ main() {
         {
             var src = @"
 main() {
+    int a;
+    int b;
     a = 10;
     b = &a;
     return *b;
@@ -491,6 +504,9 @@ main() {
         {
             var src = @"
 main() {
+    int a;
+    int b;
+    int c;
     a = 3;
     b = 5;
     c = &b + 8;

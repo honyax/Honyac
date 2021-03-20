@@ -24,6 +24,7 @@ namespace Honyac
         {
             this.CurrentIndex = 0;
             int length;
+            string typeName;
             for (var strIndex = 0;  strIndex < str.Length; )
             {
                 if (char.IsWhiteSpace(str[strIndex]))
@@ -89,6 +90,12 @@ namespace Honyac
                     strIndex += length;
                     continue;
                 }
+                if (IsType(str, strIndex, out typeName, out length))
+                {
+                    AddToken(TokenKind.Type, 0, typeName);
+                    strIndex += length;
+                    continue;
+                }
                 if (char.IsDigit(str[strIndex]))
                 {
                     var value = 0;
@@ -125,6 +132,18 @@ namespace Honyac
             }
 
             length = 0;
+            return false;
+        }
+
+        private bool IsType(string str, int strIndex, out string typeName, out int length)
+        {
+            if (IsKeyword(str, strIndex, "int", out length))
+            {
+                typeName = "int";
+                return true;
+            }
+
+            typeName = null;
             return false;
         }
 
@@ -283,6 +302,7 @@ namespace Honyac
     {
         Punct,  // 記号
         Ident,  // 識別子
+        Type,   // 型
         If,     // if
         Else,   // else
         While,  // while
