@@ -25,7 +25,7 @@ namespace Honyac
     ///             | "while" "(" expr ")" stmt
     ///             | "for" "(" expr? ";" expr? ";" expr? ")" stmt
     ///             | "return" expr ";"
-    ///             | type ident ";"
+    ///             | type "*"* ident ";"
     ///  expr       = assign
     ///  assign     = equality ( "=" assign)?
     ///  equality   = relational ("==" relational | "!=" relational)*
@@ -73,11 +73,16 @@ namespace Honyac
                 if (token.Kind != TokenKind.Type)
                     continue;
 
+                // "*"の数を取得
+                var pointerCount = 0;
+                for (; "*".Equals(tokenList[i + pointerCount + 1].Str); pointerCount++)
+                    ;
+
                 // 次のトークンはidentのはず
-                var identToken = tokenList[i + 1];
+                var identToken = tokenList[i + pointerCount + 1];
 
                 // さらに次のトークンが「(」の場合は関数宣言なのでスキップ
-                var nextToken = (i + 2) < tokenList.Count ? tokenList[i + 2] : null;
+                var nextToken = (i + pointerCount + 2) < tokenList.Count ? tokenList[i + pointerCount + 2] : null;
                 if (nextToken != null && "(".Equals(nextToken.Str))
                     continue;
 
@@ -89,6 +94,7 @@ namespace Honyac
                 {
                     Name = identToken.Str,
                     Offset = (lVars.Count + 1) * 8,
+                    PointerCount = pointerCount,
                 };
                 lVars.Add(lvar);
             }
@@ -244,6 +250,8 @@ namespace Honyac
             else if (TokenList.Consume(TokenKind.Type))
             {
                 // 型宣言の場合は、ひとまず型宣言ノードを作成するのみ。
+                while (TokenList.Consume('*'))
+                    ;
                 var identToken = TokenList.ExpectIdent();
                 TokenList.Expect(';');
                 node = new Node();
@@ -508,5 +516,6 @@ namespace Honyac
     {
         public string Name { get; set; }
         public int Offset { get; set; }
+        public int PointerCount { get; set; }
     }
 }

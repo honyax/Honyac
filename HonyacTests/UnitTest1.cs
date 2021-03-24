@@ -520,5 +520,45 @@ int main() {
 
             Assert.AreEqual(CopmlileAndExecOnWsl(src), 3);
         }
+
+        [TestMethod]
+        public void Test17_ポインタへの代入()
+        {
+            var src = @"
+int main() {
+    int a;
+    int *b;
+    b = &a;
+    *b = 18;
+    return a;
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 18);
+        }
+
+        [TestMethod]
+        public void Test18_ポインタのポインタへの代入()
+        {
+            var src = @"
+int main() {
+    int a;
+    int *b;
+    int **c;
+    c = &b;
+    b = &a;
+    **c = 27;
+    return a;
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(CopmlileAndExecOnWsl(src), 27);
+        }
     }
 }

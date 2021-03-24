@@ -19,6 +19,13 @@ namespace Honyac
                     sb.AppendLine($"  push rax");
                     break;
 
+                case NodeKind.DeRef:
+                    GenerateLval(sb, node.Nodes.Item1);
+                    sb.AppendLine($"  pop rax");
+                    sb.AppendLine($"  mov rax, [rax]");
+                    sb.AppendLine($"  push rax");
+                    break;
+
                 default:
                     throw new ArgumentException($"Invalid NodeKind:{node}");
             }
