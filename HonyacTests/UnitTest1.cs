@@ -128,10 +128,10 @@ namespace HonyacTests
 
                 Program.Main(new string[] { src });
 
-                Assert.AreEqual(output.ToString(), outTest.ToString());
+                Assert.AreEqual(outTest.ToString(), output.ToString());
             }
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 100);
+            Assert.AreEqual(100, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -176,10 +176,10 @@ namespace HonyacTests
 
                 Program.Main(new string[] { src });
 
-                Assert.AreEqual(output.ToString(), outTest.ToString());
+                Assert.AreEqual(outTest.ToString(), output.ToString());
             }
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 15);
+            Assert.AreEqual(15, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -187,22 +187,22 @@ namespace HonyacTests
         {
             var src = "int main() { 10 + 50 - 60; }";
             var tokenList = TokenList.Tokenize(src);
-            Assert.AreEqual(tokenList.Count, 12);
+            Assert.AreEqual(12, tokenList.Count);
             Assert.IsNotNull(tokenList.Expect(TokenKind.Type));
-            Assert.AreEqual(tokenList.ExpectIdent().Str, "main");
+            Assert.AreEqual("main", tokenList.ExpectIdent().Str);
             Assert.IsTrue(tokenList.Consume('('));
             Assert.IsTrue(tokenList.Consume(')'));
             Assert.IsTrue(tokenList.Consume('{'));
-            Assert.AreEqual(tokenList.ExpectNumber(), 10);
+            Assert.AreEqual(10, tokenList.ExpectNumber());
             Assert.IsTrue(tokenList.Consume('+'));
-            Assert.AreEqual(tokenList.ExpectNumber(), 50);
+            Assert.AreEqual(50, tokenList.ExpectNumber());
             Assert.IsTrue(tokenList.Consume('-'));
-            Assert.AreEqual(tokenList.ExpectNumber(), 60);
+            Assert.AreEqual(60, tokenList.ExpectNumber());
             Assert.IsTrue(tokenList.Consume(';'));
             Assert.IsTrue(tokenList.Consume('}'));
             Assert.IsTrue(tokenList.IsEof());
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 0);
+            Assert.AreEqual(0, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -213,19 +213,19 @@ namespace HonyacTests
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var head = nodeMap.Head.Nodes.Item1.Bodies[0];
-            Assert.AreEqual(head.Kind, NodeKind.Sub);
-            Assert.AreEqual(head.Nodes.Item1.Kind, NodeKind.Sub);
-            Assert.AreEqual(head.Nodes.Item2.Kind, NodeKind.Div);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Value, 100);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Kind, NodeKind.Mul);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Kind, NodeKind.Add);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item2.Value, 10);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item1.Value, 7);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item2.Value, 2);
-            Assert.AreEqual(head.Nodes.Item2.Nodes.Item1.Value, 20);
-            Assert.AreEqual(head.Nodes.Item2.Nodes.Item2.Value, 5);
+            Assert.AreEqual(NodeKind.Sub, head.Kind);
+            Assert.AreEqual(NodeKind.Sub, head.Nodes.Item1.Kind);
+            Assert.AreEqual(NodeKind.Div, head.Nodes.Item2.Kind);
+            Assert.AreEqual(100, head.Nodes.Item1.Nodes.Item1.Value);
+            Assert.AreEqual(NodeKind.Mul, head.Nodes.Item1.Nodes.Item2.Kind);
+            Assert.AreEqual(NodeKind.Add, head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Kind);
+            Assert.AreEqual(10, head.Nodes.Item1.Nodes.Item2.Nodes.Item2.Value);
+            Assert.AreEqual(7, head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item1.Value);
+            Assert.AreEqual(2, head.Nodes.Item1.Nodes.Item2.Nodes.Item1.Nodes.Item2.Value);
+            Assert.AreEqual(20, head.Nodes.Item2.Nodes.Item1.Value);
+            Assert.AreEqual(5, head.Nodes.Item2.Nodes.Item2.Value);
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 6);
+            Assert.AreEqual(6, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -236,14 +236,14 @@ namespace HonyacTests
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var head = nodeMap.Head.Nodes.Item1.Bodies[0];
-            Assert.AreEqual(head.Kind, NodeKind.Add);
-            Assert.AreEqual(head.Nodes.Item1.Kind, NodeKind.Sub);
-            Assert.AreEqual(head.Nodes.Item2.Value, 20); ;
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Kind, NodeKind.Num);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item1.Value, 0);
-            Assert.AreEqual(head.Nodes.Item1.Nodes.Item2.Value, 10);
+            Assert.AreEqual(NodeKind.Add, head.Kind);
+            Assert.AreEqual(NodeKind.Sub, head.Nodes.Item1.Kind);
+            Assert.AreEqual(20, head.Nodes.Item2.Value);
+            Assert.AreEqual(NodeKind.Num, head.Nodes.Item1.Nodes.Item1.Kind);
+            Assert.AreEqual(0, head.Nodes.Item1.Nodes.Item1.Value);
+            Assert.AreEqual(10, head.Nodes.Item1.Nodes.Item2.Value);
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 10);
+            Assert.AreEqual(10, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -261,9 +261,9 @@ namespace HonyacTests
                 var nodeMap = NodeMap.Create(tokenList);
                 Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
                 var head = nodeMap.Head.Nodes.Item1.Bodies[0];
-                Assert.AreEqual(head.Kind, tuple.Item1);
-                Assert.AreEqual(head.Nodes.Item1.Value, 10);
-                Assert.AreEqual(head.Nodes.Item2.Value, 20);
+                Assert.AreEqual(tuple.Item1, head.Kind);
+                Assert.AreEqual(10, head.Nodes.Item1.Value);
+                Assert.AreEqual(20, head.Nodes.Item2.Value);
             }
 
             var inverseComparators = new List<Tuple<NodeKind, string>>() {
@@ -276,9 +276,9 @@ namespace HonyacTests
                 var nodeMap = NodeMap.Create(tokenList);
                 Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
                 var head = nodeMap.Head.Nodes.Item1.Bodies[0];
-                Assert.AreEqual(head.Kind, tuple.Item1);
-                Assert.AreEqual(head.Nodes.Item1.Value, 20);
-                Assert.AreEqual(head.Nodes.Item2.Value, 10);
+                Assert.AreEqual(tuple.Item1, head.Kind);
+                Assert.AreEqual(20, head.Nodes.Item1.Value);
+                Assert.AreEqual(10, head.Nodes.Item2.Value);
             }
         }
 
@@ -298,20 +298,20 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
-            Assert.AreEqual(block.Bodies.Count, 5);
+            Assert.AreEqual(5, block.Bodies.Count);
             var n0 = block.Bodies[2];
             var n1 = block.Bodies[3];
             var n2 = block.Bodies[4];
-            Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
-            Assert.AreEqual(n0.Nodes.Item2.Value, 10);
-            Assert.AreEqual(n1.Nodes.Item1.Offset, 16);
-            Assert.AreEqual(n1.Nodes.Item2.Value, 50);
-            Assert.AreEqual(n2.Nodes.Item1.Offset, 8);
-            Assert.AreEqual(n2.Nodes.Item2.Kind, NodeKind.Add);
-            Assert.AreEqual(n2.Nodes.Item2.Nodes.Item1.Offset, 16);
-            Assert.AreEqual(n2.Nodes.Item2.Nodes.Item2.Offset, 8);
+            Assert.AreEqual(8, n0.Nodes.Item1.Offset);
+            Assert.AreEqual(10, n0.Nodes.Item2.Value);
+            Assert.AreEqual(16, n1.Nodes.Item1.Offset);
+            Assert.AreEqual(50, n1.Nodes.Item2.Value);
+            Assert.AreEqual(8, n2.Nodes.Item1.Offset);
+            Assert.AreEqual(NodeKind.Add, n2.Nodes.Item2.Kind);
+            Assert.AreEqual(16, n2.Nodes.Item2.Nodes.Item1.Offset);
+            Assert.AreEqual(8, n2.Nodes.Item2.Nodes.Item2.Offset);
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 60);
+            Assert.AreEqual(60, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -334,17 +334,17 @@ int main() {
             var n0 = block.Bodies[2];
             var n1 = block.Bodies[3];
             var n2 = block.Bodies[4];
-            Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
-            Assert.AreEqual(n0.Nodes.Item2.Value, 1);
-            Assert.AreEqual(n1.Nodes.Item1.Offset, 16);
-            Assert.AreEqual(n1.Nodes.Item2.Kind, NodeKind.Add);
-            Assert.AreEqual(n1.Nodes.Item2.Nodes.Item1.Value, 2);
-            Assert.AreEqual(n1.Nodes.Item2.Nodes.Item2.Value, 3);
-            Assert.AreEqual(n2.Kind, NodeKind.Add);
-            Assert.AreEqual(n2.Nodes.Item1.Offset, 8);
-            Assert.AreEqual(n2.Nodes.Item2.Offset, 16);
+            Assert.AreEqual(8, n0.Nodes.Item1.Offset);
+            Assert.AreEqual(1, n0.Nodes.Item2.Value);
+            Assert.AreEqual(16, n1.Nodes.Item1.Offset);
+            Assert.AreEqual(NodeKind.Add, n1.Nodes.Item2.Kind);
+            Assert.AreEqual(2, n1.Nodes.Item2.Nodes.Item1.Value);
+            Assert.AreEqual(3, n1.Nodes.Item2.Nodes.Item2.Value);
+            Assert.AreEqual(NodeKind.Add, n2.Kind);
+            Assert.AreEqual(8, n2.Nodes.Item1.Offset);
+            Assert.AreEqual(16, n2.Nodes.Item2.Offset);
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 6);
+            Assert.AreEqual(6, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -361,17 +361,17 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
-            Assert.AreEqual(block.Bodies.Count, 3);
+            Assert.AreEqual(3, block.Bodies.Count);
             var n0 = block.Bodies[1];
             var n1 = block.Bodies[2];
-            Assert.AreEqual(n0.Kind, NodeKind.Assign);
-            Assert.AreEqual(n0.Nodes.Item1.Offset, 8);
-            Assert.AreEqual(n0.Nodes.Item2.Value, 15);
-            Assert.AreEqual(n1.Kind, NodeKind.Return);
-            Assert.AreEqual(n1.Nodes.Item1.Offset, 8);
+            Assert.AreEqual(NodeKind.Assign, n0.Kind);
+            Assert.AreEqual(8, n0.Nodes.Item1.Offset);
+            Assert.AreEqual(15, n0.Nodes.Item2.Value);
+            Assert.AreEqual(NodeKind.Return, n1.Kind);
+            Assert.AreEqual(8, n1.Nodes.Item1.Offset);
             Assert.IsNull(n1.Nodes.Item2);
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 15);
+            Assert.AreEqual(15, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -389,16 +389,16 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
             var block = nodeMap.Head.Nodes.Item1;
-            Assert.AreEqual(block.Bodies.Count, 1);
+            Assert.AreEqual(1, block.Bodies.Count);
             var n0 = block.Bodies[0];
-            Assert.AreEqual(n0.Kind, NodeKind.If);
-            Assert.AreEqual(n0.Condition.Value, 1);
-            Assert.AreEqual(n0.Nodes.Item1.Kind, NodeKind.Return);
-            Assert.AreEqual(n0.Nodes.Item1.Nodes.Item1.Value, 2);
-            Assert.AreEqual(n0.Nodes.Item2.Kind, NodeKind.Return);
-            Assert.AreEqual(n0.Nodes.Item2.Nodes.Item1.Value, 3);
+            Assert.AreEqual(NodeKind.If, n0.Kind);
+            Assert.AreEqual(1, n0.Condition.Value);
+            Assert.AreEqual(NodeKind.Return, n0.Nodes.Item1.Kind);
+            Assert.AreEqual(2, n0.Nodes.Item1.Nodes.Item1.Value);
+            Assert.AreEqual(NodeKind.Return, n0.Nodes.Item2.Kind);
+            Assert.AreEqual(3, n0.Nodes.Item2.Nodes.Item1.Value);
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 2);
+            Assert.AreEqual(2, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -419,7 +419,7 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 3);
+            Assert.AreEqual(3, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -440,7 +440,7 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 13);
+            Assert.AreEqual(13, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -463,7 +463,7 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 19);
+            Assert.AreEqual(19, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -478,7 +478,7 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 10);
+            Assert.AreEqual(10, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -497,7 +497,7 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 10);
+            Assert.AreEqual(10, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -518,7 +518,7 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 3);
+            Assert.AreEqual(3, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -537,7 +537,7 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 18);
+            Assert.AreEqual(18, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -558,7 +558,7 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(CopmlileAndExecOnWsl(src), 27);
+            Assert.AreEqual(27, CopmlileAndExecOnWsl(src));
         }
     }
 }
