@@ -10,12 +10,13 @@ namespace Honyac
 
         private TokenList() { }
 
-        private Token AddToken(TokenKind kind, int value, string str)
+        private Token AddToken(TokenKind kind, int value, string str, TypeKind typeKind = TypeKind.None)
         {
             var token = new Token();
             token.Kind = kind;
             token.Value = value;
             token.Str = str;
+            token.TypeKind = typeKind;
             Add(token);
             return token;
         }
@@ -25,6 +26,7 @@ namespace Honyac
             this.CurrentIndex = 0;
             int length;
             string typeName;
+            TypeKind typeKind;
             for (var strIndex = 0;  strIndex < str.Length; )
             {
                 if (char.IsWhiteSpace(str[strIndex]))
@@ -90,9 +92,9 @@ namespace Honyac
                     strIndex += length;
                     continue;
                 }
-                if (IsType(str, strIndex, out typeName, out length))
+                if (IsType(str, strIndex, out typeKind, out length))
                 {
-                    AddToken(TokenKind.Type, 0, typeName);
+                    AddToken(TokenKind.Type, 0, TypeUtils.TypeDic[typeKind].Name, typeKind);
                     strIndex += length;
                     continue;
                 }
@@ -135,15 +137,19 @@ namespace Honyac
             return false;
         }
 
-        private bool IsType(string str, int strIndex, out string typeName, out int length)
+        private bool IsType(string str, int strIndex, out TypeKind typeKind, out int length)
         {
-            if (IsKeyword(str, strIndex, "int", out length))
+            foreach (var type in TypeUtils.TypeDic.Values)
             {
-                typeName = "int";
-                return true;
+                if (IsKeyword(str, strIndex, type.Name, out length))
+                {
+                    typeKind = type.Kind;
+                    return true;
+                }
             }
 
-            typeName = null;
+            length = 0;
+            typeKind = TypeKind.None;
             return false;
         }
 
@@ -305,6 +311,8 @@ namespace Honyac
         public int Value { get; set; }
         /// <summary>トークン文字列</summary>
         public string Str { get; set; }
+        /// <summary>型種別</summary>
+        public TypeKind TypeKind { get; set; }
     }
 
     /// <summary>

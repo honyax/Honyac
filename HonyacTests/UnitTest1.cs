@@ -31,7 +31,7 @@ namespace HonyacTests
             if (node.Kind != NodeKind.Num && node.Value != 0)
                 return false;
 
-            if (node.Kind != NodeKind.Lvar && node.Offset != 0)
+            if (node.Kind != NodeKind.Lvar && (node.Offset != 0 || node.LVar != null))
                 return false;
 
             if (node.Kind != NodeKind.If && node.Kind != NodeKind.While && node.Kind != NodeKind.For && node.Condition != null)
@@ -559,6 +559,34 @@ int main() {
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
             Assert.AreEqual(27, CopmlileAndExecOnWsl(src));
+        }
+
+        [TestMethod]
+        public void Test19_ポインタの加算と減算()
+        {
+            // TODO: 現状は全ての変数をスタックに 8byte ずつ積んでいるので成立する
+            var src = @"
+int main() {
+    int a;
+    int b;
+    int c;
+    int d;
+    d = 1;
+    c = 2;
+    b = 4;
+    a = 8;
+    int *p;
+    int *q;
+    p = &d;
+    q = p + 6;
+    return *q;
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(8, CopmlileAndExecOnWsl(src));
         }
     }
 }

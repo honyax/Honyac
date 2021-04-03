@@ -180,6 +180,32 @@ namespace Honyac
             Generate(sb, node.Nodes.Item1);
             Generate(sb, node.Nodes.Item2);
 
+            if (node.Nodes.Item1.Kind == NodeKind.Lvar)
+            {
+                // ポインタに対する加減算の場合は、ポインタの指し先のサイズ分だけ加減算する
+                // Add, Sub以外の場合はおかしなことになるがひとまず気にしない
+                var lvar = node.Nodes.Item1.LVar;
+                if (lvar != null && lvar.PointerCount > 0)
+                {
+                    int size;
+                    if (lvar.PointerCount == 1)
+                    {
+                        var type = TypeUtils.TypeDic[lvar.Kind];
+                        size = type.Size;
+                    }
+                    else
+                    {
+                        // 指し先がポインタの場合は8ずつ加減算する
+                        size = 8;
+                    }
+
+                    sb.AppendLine($"  pop rax");
+                    sb.AppendLine($"  mov rdi, {size}");
+                    sb.AppendLine($"  mul rdi");
+                    sb.AppendLine($"  push rax");
+                }
+            }
+
             sb.AppendLine("  pop rdi");
             sb.AppendLine("  pop rax");
 

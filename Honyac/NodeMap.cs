@@ -93,6 +93,7 @@ namespace Honyac
                 var lvar = new LVar
                 {
                     Name = identToken.Str,
+                    Kind = token.TypeKind,
                     Offset = (lVars.Count + 1) * 8,
                     PointerCount = pointerCount,
                 };
@@ -116,11 +117,12 @@ namespace Honyac
             return node;
         }
 
-        private Node NewNodeIdent(int offset)
+        private Node NewNodeIdent(LVar lvar)
         {
             var node = new Node();
             node.Kind = NodeKind.Lvar;
-            node.Offset = offset;
+            node.Offset = lvar.Offset;
+            node.LVar = lvar;
             return node;
         }
 
@@ -416,12 +418,11 @@ namespace Honyac
                 }
                 else
                 {
-                    var lVar = LVars.FirstOrDefault(lv => lv.Name == identToken.Str);
-                    if (lVar == null)
+                    var lvar = LVars.FirstOrDefault(lv => lv.Name == identToken.Str);
+                    if (lvar == null)
                         throw new ArgumentException($"Unknown Identifier:{identToken.Str}");
 
-                    var offset = lVar.Offset;
-                    return NewNodeIdent(offset);
+                    return NewNodeIdent(lvar);
                 }
             }
             else
@@ -475,6 +476,12 @@ namespace Honyac
         /// </summary>
         public List<LVar> LVars { get; set; }
 
+        /// <summary>
+        /// 変数。
+        /// KindがLVarの場合のみ有効。その他の場合はnull
+        /// </summary>
+        public LVar LVar { get; set; }
+
         public override string ToString()
         {
             return $"Kind:{Kind} Value:{Value} Offset:{Offset}";
@@ -515,6 +522,7 @@ namespace Honyac
     public class LVar
     {
         public string Name { get; set; }
+        public TypeKind Kind { get; set; }
         public int Offset { get; set; }
         public int PointerCount { get; set; }
     }
