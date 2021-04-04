@@ -35,6 +35,7 @@ namespace Honyac
     ///  unary      = ("+" | "-")? primary
     ///             | "&" unary
     ///             | "*" unary
+    ///             | "sizeof" unary
     ///  primary    = num
     ///             | ident ( "(" ")" )?
     ///             | "(" expr ")"
@@ -387,6 +388,31 @@ namespace Honyac
             else if (TokenList.Consume('*'))
             {
                 return NewNode(NodeKind.DeRef, Unary(), null);
+            }
+            else if (TokenList.Consume(TokenKind.Sizeof))
+            {
+                var node = Unary();
+                switch (node.Kind)
+                {
+                    case NodeKind.Lvar:
+                        int size;
+                        if (node.LVar.PointerCount > 0)
+                        {
+                            size = 8;
+                        }
+                        else
+                        {
+                            size = TypeUtils.TypeDic[node.LVar.Kind].Size;
+                        }
+                        return NewNodeNum(size);
+
+                    case NodeKind.Num:
+                        // sizeofに数値が指定されている場合はint型とする
+                        return NewNodeNum(TypeUtils.TypeDic[TypeKind.Int].Size);
+
+                    default:
+                        throw new ArgumentException($"Invalid sizeof node:{node}");
+                }
             }
             else
             {

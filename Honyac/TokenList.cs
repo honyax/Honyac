@@ -86,6 +86,12 @@ namespace Honyac
                     strIndex += length;
                     continue;
                 }
+                if (IsKeyword(str, strIndex, "sizeof", out length))
+                {
+                    AddToken(TokenKind.Sizeof, 0, "sizeof");
+                    strIndex += length;
+                    continue;
+                }
                 if (IsKeyword(str, strIndex, "return", out length))
                 {
                     AddToken(TokenKind.Return, 0, "return");
@@ -327,6 +333,7 @@ namespace Honyac
         Else,   // else
         While,  // while
         For,    // for
+        Sizeof, // sizeof
         Return, // return
         Num,    // 整数トークン
     }

@@ -588,5 +588,22 @@ int main() {
 
             Assert.AreEqual(8, CopmlileAndExecOnWsl(src));
         }
+
+        [TestMethod]
+        public void Test20_sizeof‰‰ŽZŽq()
+        {
+            var src = @"
+int main() {
+    int a;
+    int *b;
+    return sizeof(a) + sizeof(b) + sizeof(100);
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(16, CopmlileAndExecOnWsl(src));
+        }
     }
 }
