@@ -647,5 +647,26 @@ int main() {
 
             Assert.AreEqual(14, CopmlileAndExecOnWsl(src));
         }
+
+        [TestMethod]
+        public void Test22_”z—ñ‚Ì“YŽš()
+        {
+            var src = @"
+int main() {
+    int a[2];
+    a[0] = 2;
+    a[1] = 10;
+    int *p;
+    p = a;
+    p[0] = p[0] * 2;
+    return p[0] + p[1];
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(14, CopmlileAndExecOnWsl(src));
+        }
     }
 }

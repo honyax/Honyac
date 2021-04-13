@@ -38,6 +38,7 @@ namespace Honyac
     ///             | "sizeof" unary
     ///  primary    = num
     ///             | ident ( "(" ")" )?
+    ///             | ident ( "[" expr "]" )?
     ///             | "(" expr ")"
     ///  
     /// </summary>
@@ -473,6 +474,22 @@ namespace Honyac
                     node.Kind = NodeKind.FuncCall;
                     node.FuncName = identToken.Str;
                     TokenList.Expect(')');
+                    return node;
+                }
+                else if (TokenList.Consume('['))
+                {
+                    var lvar = LVars.FirstOrDefault(lv => lv.Name == identToken.Str);
+                    if (lvar == null)
+                        throw new ArgumentException($"Unknown Identifier:{identToken.Str}");
+
+                    // identTokenの次に「[」が来る場合は配列
+                    // 配列は、以下のように読み替える
+                    // a[3] => *(a + 3)
+                    var identNode = NewNodeIdent(lvar);
+                    var exprNode = Expr();
+                    TokenList.Expect(']');
+                    var addNode = NewNode(NodeKind.Add, identNode, exprNode);
+                    var node = NewNode(NodeKind.DeRef, addNode, null);
                     return node;
                 }
                 else
