@@ -29,7 +29,8 @@ namespace Honyac
     {
         public static readonly Dictionary<TypeKind, Type> TypeDic = new Dictionary<TypeKind, Type>()
         {
-            {TypeKind.Int, new Type(TypeKind.Int, "int", 4) },
+            // TODO: intのサイズはひとまず8にする。4にすると各種ニーモニックの対応が必要になるので
+            {TypeKind.Int, new Type(TypeKind.Int, "int", 8) },
         };
     }
 }

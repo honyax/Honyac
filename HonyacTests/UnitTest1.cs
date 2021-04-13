@@ -562,7 +562,7 @@ int main() {
         }
 
         [TestMethod]
-        public void Test19_ポインタの加算と減算()
+        public void Test19_1_ポインタの加算と減算()
         {
             // TODO: 現状は全ての変数をスタックに 8byte ずつ積んでいるので成立する
             var src = @"
@@ -578,7 +578,7 @@ int main() {
     int *p;
     int *q;
     p = &d;
-    q = p + 6;
+    q = p + 3;
     return *q;
 }
 ";
@@ -587,6 +587,27 @@ int main() {
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
             Assert.AreEqual(8, CopmlileAndExecOnWsl(src));
+        }
+
+        [TestMethod]
+        public void Test19_2_ポインタのLVarに代入()
+        {
+            var src = @"
+int main() {
+    int a;
+    int b;
+    int *p;
+    p = &b;
+    *p = 3;
+    *(p + 2) = 5;
+    return b;
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(3, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
@@ -603,7 +624,28 @@ int main() {
             var nodeMap = NodeMap.Create(tokenList);
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
-            Assert.AreEqual(16, CopmlileAndExecOnWsl(src));
+            Assert.AreEqual(24, CopmlileAndExecOnWsl(src));
+        }
+
+        [TestMethod]
+        public void Test21_配列()
+        {
+            var src = @"
+int main() {
+    int a[2];
+    *a = 2;
+    *(a+1) = 10;
+    int *p;
+    p = a;
+    *p = *p * 2;
+    return *p + *(p+1);
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(14, CopmlileAndExecOnWsl(src));
         }
     }
 }

@@ -21,13 +21,19 @@ namespace Honyac
 
                 case NodeKind.DeRef:
                     GenerateLval(sb, node.Nodes.Item1);
-                    sb.AppendLine($"  pop rax");
-                    sb.AppendLine($"  mov rax, [rax]");
-                    sb.AppendLine($"  push rax");
+                    // 変数のポインタやポインタのポインタの場合は、代わりに指し先の値を設定する
+                    if (node.Nodes.Item1.Kind == NodeKind.Lvar || node.Nodes.Item1.Kind == NodeKind.DeRef)
+                    {
+                        sb.AppendLine($"  pop rax");
+                        sb.AppendLine($"  mov rax, [rax]");
+                        sb.AppendLine($"  push rax");
+                    }
                     break;
 
                 default:
-                    throw new ArgumentException($"Invalid NodeKind:{node}");
+                    // 直接変数やポインタが指定されていない場合は、そのまま処理を実行する
+                    Generate(sb, node);
+                    break;
             }
         }
 
@@ -168,7 +174,16 @@ namespace Honyac
                     return;
 
                 case NodeKind.Type:
-                    // 型宣言ノードはひとまず無視する。
+                    // 型宣言ノードは、配列の場合のみ直下のアドレスを設定する
+                    if (node.LVar.ArraySize > 0)
+                    {
+                        sb.AppendLine($"  mov rax, rbp");
+                        sb.AppendLine($"  sub rax, {node.LVar.Offset}");
+                        sb.AppendLine($"  mov rdi, rbp");
+                        sb.AppendLine($"  sub rdi, {node.LVar.Offset - 8}");
+                        sb.AppendLine($"  mov [rax], rdi");
+                    }
+
                     // 呼び出すごとにpopされるので、ダミーのpushを入れる
                     sb.AppendLine($"  push 0");
                     return;

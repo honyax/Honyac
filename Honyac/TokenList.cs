@@ -34,7 +34,7 @@ namespace Honyac
                     strIndex++;
                     continue;
                 }
-                if ("+-*/(){};&".Contains(str[strIndex]))
+                if ("+-*/(){}[];&".Contains(str[strIndex]))
                 {
                     AddToken(TokenKind.Punct, 0, str[strIndex].ToString());
                     strIndex++;

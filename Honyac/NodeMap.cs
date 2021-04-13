@@ -25,7 +25,7 @@ namespace Honyac
     ///             | "while" "(" expr ")" stmt
     ///             | "for" "(" expr? ";" expr? ";" expr? ")" stmt
     ///             | "return" expr ";"
-    ///             | type "*"* ident ";"
+    ///             | type "*"* ident ("[" num "]")? ";"
     ///  expr       = assign
     ///  assign     = equality ( "=" assign)?
     ///  equality   = relational ("==" relational | "!=" relational)*
@@ -68,6 +68,7 @@ namespace Honyac
 
         private void CreateLVars(List<Token> tokenList, List<LVar> lVars)
         {
+            var offset = 0;
             for (var i = 0; i < tokenList.Count; i++)
             {
                 var token = tokenList[i];
@@ -83,21 +84,40 @@ namespace Honyac
                 var identToken = tokenList[i + pointerCount + 1];
 
                 // さらに次のトークンが「(」の場合は関数宣言なのでスキップ
+                // 「[」の場合は配列
                 var nextToken = (i + pointerCount + 2) < tokenList.Count ? tokenList[i + pointerCount + 2] : null;
-                if (nextToken != null && "(".Equals(nextToken.Str))
+                if (nextToken == null)
+                    throw new ArgumentException($"nextToken is NULL TokenIndex:{i + pointerCount + 2}");
+                if (nextToken.Str.Equals("("))
                     continue;
+
+                var arraySize = 0;
+                if (nextToken.Str.Equals("["))
+                {
+                    // 配列として定義されている場合は、配列の数を取得してpointerCountを加算
+                    // 配列をポインタとして考えるため
+                    var numToken = tokenList[i + pointerCount + 3];
+                    arraySize = numToken.Value;
+                    pointerCount++;
+                }
 
                 // 同じ変数名があった場合はException
                 if (lVars.Exists((lvar) => lvar.Name == identToken.Str))
                     throw new ArgumentException($"Duplicate Identifier:{identToken.Str}");
 
+                // 配列の場合は、変数のアドレスを設定した後で配列の要素分だけオフセットを加算する必要がある
+                offset += 8 * arraySize;
+
+                offset += 8;
                 var lvar = new LVar
                 {
                     Name = identToken.Str,
                     Kind = token.TypeKind,
-                    Offset = (lVars.Count + 1) * 8,
+                    Offset = offset,
                     PointerCount = pointerCount,
+                    ArraySize = arraySize,
                 };
+
                 lVars.Add(lvar);
             }
         }
@@ -255,10 +275,23 @@ namespace Honyac
                 // 型宣言の場合は、ひとまず型宣言ノードを作成するのみ。
                 while (TokenList.Consume('*'))
                     ;
+
                 var identToken = TokenList.ExpectIdent();
-                TokenList.Expect(';');
+                if (TokenList.Consume('['))
+                {
+                    // 配列の場合は配列の宣言までを読み込む
+                    TokenList.ExpectNumber();
+                    TokenList.Expect(']');
+                }
+
+                var lvar = LVars.FirstOrDefault(lv => lv.Name == identToken.Str);
+                if (lvar == null)
+                    throw new ArgumentException($"Unknown Identifier:{identToken.Str}");
+
                 node = new Node();
                 node.Kind = NodeKind.Type;
+                node.LVar = lvar;
+                TokenList.Expect(';');
             }
             else
             {
@@ -550,6 +583,16 @@ namespace Honyac
         public string Name { get; set; }
         public TypeKind Kind { get; set; }
         public int Offset { get; set; }
+        /// <summary>
+        /// ポインタの数
+        /// int a; の場合は0
+        /// int **a; の場合は2
+        /// </summary>
         public int PointerCount { get; set; }
+        /// <summary>
+        /// 配列の数
+        /// int a[5]; の場合は5
+        /// </summary>
+        public int ArraySize { get; set; }
     }
 }
