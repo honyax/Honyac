@@ -467,7 +467,7 @@ int main() {
         }
 
         [TestMethod]
-        public void Test14_ŠÖ”ŒÄ‚Ño‚µ()
+        public void Test14_1_ŠÖ”ŒÄ‚Ño‚µ()
         {
             var src = @"
 int main() {
@@ -479,6 +479,25 @@ int main() {
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
             Assert.AreEqual(10, CopmlileAndExecOnWsl(src));
+        }
+
+        [TestMethod]
+        public void Test14_2_ŠÖ”ŒÄ‚Ño‚µ()
+        {
+            var src = @"
+int hoge() {
+    return 15;
+}
+
+int main() {
+    return hoge();
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(15, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]
