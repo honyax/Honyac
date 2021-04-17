@@ -506,7 +506,7 @@ int main() {
             var src = @"
 int main() {
     int a;
-    int b;
+    int *b;
     a = 10;
     b = &a;
     return *b;
@@ -526,7 +526,7 @@ int main() {
 int main() {
     int a;
     int b;
-    int c;
+    int *c;
     a = 3;
     b = 5;
     c = &b + 8;
