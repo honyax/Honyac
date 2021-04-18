@@ -34,7 +34,7 @@ namespace Honyac
                     strIndex++;
                     continue;
                 }
-                if ("+-*/(){}[];&".Contains(str[strIndex]))
+                if ("+-*/(){}[];&,".Contains(str[strIndex]))
                 {
                     AddToken(TokenKind.Punct, 0, str[strIndex].ToString());
                     strIndex++;
@@ -241,6 +241,16 @@ namespace Honyac
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// 現在のトークンを取得し、トークンが何であろうとも読み進める
+        /// </summary>
+        public Token Consume()
+        {
+            var token = Current;
+            CurrentIndex++;
+            return token;
         }
 
         /// <summary>

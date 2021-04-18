@@ -28,10 +28,37 @@ namespace HonyacTests
                     return false;
             }
 
+            if (!ValidateNode(node.Condition))
+                return false;
+
+            if (!ValidateNode(node.Initialize))
+                return false;
+
+            if (!ValidateNode(node.Loop))
+                return false;
+
+            if (node.Bodies != null)
+            {
+                foreach (var body in node.Bodies)
+                {
+                    if (!ValidateNode(body))
+                        return false;
+                }
+            }
+
+            if (node.Arguments != null)
+            {
+                foreach (var arg in node.Arguments)
+                {
+                    if (!ValidateNode(arg))
+                        return false;
+                }
+            }
+
             if (node.Kind != NodeKind.Num && node.Value != 0)
                 return false;
 
-            if (node.Kind != NodeKind.Lvar && (node.Offset != 0 || node.LVar != null))
+            if ((node.Kind != NodeKind.Lvar && node.Kind != NodeKind.Type) && (node.Offset != 0 || node.LVar != null))
                 return false;
 
             if (node.Kind != NodeKind.If && node.Kind != NodeKind.While && node.Kind != NodeKind.For && node.Condition != null)
@@ -47,6 +74,9 @@ namespace HonyacTests
                 return false;
 
             if (node.Kind != NodeKind.Function && node.LVars != null)
+                return false;
+
+            if (node.Kind != NodeKind.FuncCall && node.Arguments != null)
                 return false;
 
             return true;
@@ -498,6 +528,27 @@ int main() {
             Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
 
             Assert.AreEqual(15, CopmlileAndExecOnWsl(src));
+        }
+
+        [TestMethod]
+        public void Test14_3_à¯êîÇ¬Ç´ÇÃä÷êîåƒÇ—èoÇµ()
+        {
+            var src = @"
+int hoge(int x1, int x2) {
+    int x3;
+    x3 = 10;
+    return x1 + x2 + x3;
+}
+
+int main() {
+    return hoge(1, 8);
+}
+";
+            var tokenList = TokenList.Tokenize(src);
+            var nodeMap = NodeMap.Create(tokenList);
+            Assert.IsTrue(ValidateNodeValuesAndOffsets(nodeMap));
+
+            Assert.AreEqual(19, CopmlileAndExecOnWsl(src));
         }
 
         [TestMethod]

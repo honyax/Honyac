@@ -18,7 +18,7 @@ namespace Honyac
     /// 
     /// 上記に従い、EBNF(Extended Backus-Naur form)を実装する
     ///  program    = function*
-    ///  function   = type ident "(" ")" stmt
+    ///  function   = type "*"* ident "(" (type "*"* ident ("," type "*"* ident)* )? ")" stmt
     ///  stmt       = expr ";"
     ///             | "{" stmt* "}"
     ///             | "if" "(" expr ")" stmt ("else" stmt)?
@@ -27,7 +27,7 @@ namespace Honyac
     ///             | "return" expr ";"
     ///             | type "*"* ident ("[" num "]")? ";"
     ///  expr       = assign
-    ///  assign     = equality ( "=" assign)?
+    ///  assign     = equality ("=" assign)?
     ///  equality   = relational ("==" relational | "!=" relational)*
     ///  relational = add ("<" add | "<=" add | ">" add | ">=" add)*
     ///  add        = mul ("+" mul | "-" mul)*
@@ -37,10 +37,11 @@ namespace Honyac
     ///             | "*" unary
     ///             | "sizeof" unary
     ///  primary    = num
-    ///             | ident ( "(" ")" )?
-    ///             | ident ( "[" expr "]" )?
+    ///             | ident "(" (expr ("," expr)* )? ")"
+    ///             | ident "[" expr "]"
+    ///             | ident
     ///             | "(" expr ")"
-    ///  
+    /// 
     /// </summary>
     public class NodeMap
     {
@@ -67,28 +68,74 @@ namespace Honyac
             Program();
         }
 
-        private void CreateLVars(List<Token> tokenList, List<LVar> lVars)
+        private void CreateLVars(List<Token> tokenList, List<Token> argumentTokens, List<LVar> lVars)
         {
             var offset = 0;
-            for (var i = 0; i < tokenList.Count; i++)
+
+            // 引数トークンから引数のリストを作成
+            var argIndex = 0;
+            for (var i = 0; i < argumentTokens.Count; )
             {
-                var token = tokenList[i];
-                if (token.Kind != TokenKind.Type)
+                // 引数トークンの形式は決まっている。最初はタイプのはず。
+                var typeToken = argumentTokens[i];
+                if (typeToken.Kind != TokenKind.Type)
+                    throw new ArgumentException($"Invalid ArgumentToken:{typeToken} ArgumentTokenIndex:{i}");
+                i++;
+
+                // "*"の数を取得
+                var pointerCount = 0;
+                for (; "*".Equals(argumentTokens[i + pointerCount].Str); pointerCount++)
+                    ;
+                i += pointerCount;
+
+                // 次のトークンはidentのはず
+                var identToken = argumentTokens[i];
+                i++;
+
+                offset += 8;
+                var lvar = new LVar
+                {
+                    Name = identToken.Str,
+                    Kind = typeToken.TypeKind,
+                    Offset = offset,
+                    PointerCount = pointerCount,
+                    ArraySize = 0,
+                    ArgIndex = argIndex,
+                };
+
+                lVars.Add(lvar);
+                argIndex++;
+
+                // 次のトークンがあるとしたら","だが、ここで終わりの可能性もある
+                var commaToken = i < argumentTokens.Count ? argumentTokens[i] : null;
+                if (commaToken == null)
+                    break;
+                if (!commaToken.Str.Equals(","))
+                    throw new ArgumentException($"Not comma token:{commaToken} index:{i}");
+                i++;
+            }
+
+            for (var i = 0; i < tokenList.Count; )
+            {
+                var typeToken = tokenList[i];
+                i++;
+                if (typeToken.Kind != TokenKind.Type)
                     continue;
 
                 // "*"の数を取得
                 var pointerCount = 0;
-                for (; "*".Equals(tokenList[i + pointerCount + 1].Str); pointerCount++)
+                for (; "*".Equals(tokenList[i + pointerCount].Str); pointerCount++)
                     ;
+                i += pointerCount;
 
                 // 次のトークンはidentのはず
-                var identToken = tokenList[i + pointerCount + 1];
+                var identToken = tokenList[i];
+                i++;
 
                 // さらに次のトークンが「(」の場合は関数宣言なのでスキップ
                 // 「[」の場合は配列
-                var nextToken = (i + pointerCount + 2) < tokenList.Count ? tokenList[i + pointerCount + 2] : null;
-                if (nextToken == null)
-                    throw new ArgumentException($"nextToken is NULL TokenIndex:{i + pointerCount + 2}");
+                var nextToken = tokenList[i];
+                i++;
                 if (nextToken.Str.Equals("("))
                     continue;
 
@@ -97,9 +144,16 @@ namespace Honyac
                 {
                     // 配列として定義されている場合は、配列の数を取得してpointerCountを加算
                     // 配列をポインタとして考えるため
-                    var numToken = tokenList[i + pointerCount + 3];
+                    var numToken = tokenList[i];
+                    i++;
                     arraySize = numToken.Value;
                     pointerCount++;
+
+                    // 次は閉じカッコのはず（カッコの中の計算は今の所許容していない）
+                    var endBracketToken = tokenList[i];
+                    if (!endBracketToken.Str.Equals("]"))
+                        throw new ArgumentException($"Not end bracket token:{endBracketToken} index:{i}");
+                    i++;
                 }
 
                 // 同じ変数名があった場合はException
@@ -113,10 +167,11 @@ namespace Honyac
                 var lvar = new LVar
                 {
                     Name = identToken.Str,
-                    Kind = token.TypeKind,
+                    Kind = typeToken.TypeKind,
                     Offset = offset,
                     PointerCount = pointerCount,
                     ArraySize = arraySize,
+                    ArgIndex = -1,
                 };
 
                 lVars.Add(lvar);
@@ -160,10 +215,24 @@ namespace Honyac
         {
             // 関数の戻り地の型宣言。ひとまず無視
             TokenList.Expect(TokenKind.Type);
+            while (TokenList.Consume('*'))
+                ;
 
             var identToken = TokenList.ExpectIdent();
             TokenList.Expect('(');
-            TokenList.Expect(')');
+
+            // 引数用のトークン
+            var argumentTokens = new List<Token>();
+
+            // 引数を作成。閉じカッコが来るまで繰り返す
+            for (; ; )
+            {
+                if (TokenList.Consume(')'))
+                    break;
+
+                var token = TokenList.Consume();
+                argumentTokens.Add(token);
+            }
 
             // TODO: 変数はblock単位で持ちたいが、一旦関数単位で持つようにしてみる
             // 関数内のローカル変数のリストを作成するため、この関数内のトークンだけを抜き出す
@@ -181,7 +250,7 @@ namespace Honyac
                 if (bracketNum == 0)
                     break;
             }
-            CreateLVars(tokens, lVars);
+            CreateLVars(tokens, argumentTokens, lVars);
 
             // TODO: 何とかしたい
             // 配下のNodeから参照できるよう、関数内部でコピーする
@@ -473,7 +542,17 @@ namespace Honyac
                     var node = new Node();
                     node.Kind = NodeKind.FuncCall;
                     node.FuncName = identToken.Str;
-                    TokenList.Expect(')');
+                    node.Arguments = new Stack<Node>();
+
+                    // 引数がある場合は設定する
+                    while (!TokenList.Consume(')'))
+                    {
+                        var argNode = Expr();
+                        node.Arguments.Push(argNode);
+
+                        // 次に引数が続く場合はカンマが設定されている
+                        TokenList.Consume(',');
+                    }
                     return node;
                 }
                 else if (TokenList.Consume('['))
@@ -558,6 +637,13 @@ namespace Honyac
         /// </summary>
         public LVar LVar { get; set; }
 
+        /// <summary>
+        /// 関数への引数。
+        /// 引数は後ろから順番にレジスタに設定していくので、Stackとした。
+        /// 関数呼び出しの時のみ有効。その他の場合はnull
+        /// </summary>
+        public Stack<Node> Arguments { get; set; }
+
         public override string ToString()
         {
             return $"Kind:{Kind} Value:{Value} Offset:{Offset}";
@@ -611,5 +697,17 @@ namespace Honyac
         /// int a[5]; の場合は5
         /// </summary>
         public int ArraySize { get; set; }
+
+        /// <summary>
+        /// 関数の引数のインデックス
+        /// 引数であれば 0 ～ 5 の値を取る
+        /// 引数でない場合は -1
+        /// </summary>
+        public int ArgIndex { get; set; }
+
+        /// <summary>
+        /// 変数が関数の引数かどうか
+        /// </summary>
+        public bool IsArgment => ArgIndex >= 0;
     }
 }

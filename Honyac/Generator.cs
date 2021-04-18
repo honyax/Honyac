@@ -6,6 +6,8 @@ namespace Honyac
 {
     public class Generator
     {
+        static readonly string[] argRegisters = new string[] { "rdi", "rsi", "rdx", "rcx", "r8d", "r9d" };
+
         private int _counter = 1;
         private int Count() { return _counter++; }
 
@@ -132,6 +134,18 @@ namespace Honyac
                     return;
 
                 case NodeKind.FuncCall:
+
+                    // 引数を設定する
+                    Node argNode;
+                    var argRegisterIndex = node.Arguments.Count;
+                    while (node.Arguments.TryPop(out argNode))
+                    {
+                        argRegisterIndex--;
+                        Generate(sb, argNode);
+                        sb.AppendLine($"  pop rax");
+                        sb.AppendLine($"  mov {argRegisters[argRegisterIndex]}, rax");
+                    }
+
                     sb.AppendLine($"  mov rax, 0");
                     sb.AppendLine($"  call {node.FuncName}");
                     sb.AppendLine($"  push rax");
@@ -151,6 +165,12 @@ namespace Honyac
                     {
                         var maxOffset = node.LVars.Max(LVar => LVar.Offset);
                         sb.AppendLine($"  sub rsp, {maxOffset}");
+                    }
+
+                    // 引数の値をスタックに設定
+                    foreach (var lvar in node.LVars.Where(lv => lv.IsArgment))
+                    {
+                        sb.AppendLine($"  mov [rbp - {lvar.Offset}], {argRegisters[lvar.ArgIndex]}");
                     }
 
                     Generate(sb, node.Nodes.Item1);
